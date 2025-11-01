@@ -5,8 +5,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using OrderManagementSystemApplication.Enums;
-
+using OrderManagementSystemDomain.Enums;
 namespace OrderManagementSystemDomain.Models
 {
     public class Refund

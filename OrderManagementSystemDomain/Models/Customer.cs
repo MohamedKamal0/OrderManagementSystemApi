@@ -26,8 +26,8 @@ namespace OrderManagementSystemDomain.Models
         public string PhoneNumber { get; set; }
         [Required(ErrorMessage = "DateOfBirth is required.")]
         public DateTime DateOfBirth { get; set; }
-        [Required(ErrorMessage = "Password is required.")]
-        public string Password { get; set; }
+       // [Required(ErrorMessage = "Password is required.")]
+     //   public string? Password { get; set; }
         public bool IsActive { get; set; }
         public ICollection<Address> Addresses { get; set; }
         public ICollection<Order> Orders { get; set; }

@@ -5,14 +5,15 @@ using System.Text;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
-namespace OrderManagementSystemApplication.Enums
+namespace OrderManagementSystemDomain.Enums
 {
     [JsonConverter(typeof(JsonStringEnumConverter))]
-    public enum PaymentStatus
+    public enum OrderStatus
     {
         Pending = 1,
-        Completed = 6,
-        Failed = 7,
-        Refunded = 10
+        Processing = 2,
+        Shipped = 3,
+        Delivered = 4,
+        Canceled = 5
     }
 }

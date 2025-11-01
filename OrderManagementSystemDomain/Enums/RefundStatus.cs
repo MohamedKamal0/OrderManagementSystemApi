@@ -5,8 +5,9 @@ using System.Text;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
-namespace OrderManagementSystemApplication.Enums
+namespace OrderManagementSystemDomain.Enums
 {
+
     [JsonConverter(typeof(JsonStringEnumConverter))]
     public enum RefundStatus
     {

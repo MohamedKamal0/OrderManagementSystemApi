@@ -5,13 +5,14 @@ using System.Text;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
-namespace OrderManagementSystemApplication.Enums
+namespace OrderManagementSystemDomain.Enums
 {
     [JsonConverter(typeof(JsonStringEnumConverter))]
-    public enum CancellationStatus
+    public enum PaymentStatus
     {
         Pending = 1,
-        Approved = 8,
-        Rejected = 9
+        Completed = 6,
+        Failed = 7,
+        Refunded = 10
     }
 }

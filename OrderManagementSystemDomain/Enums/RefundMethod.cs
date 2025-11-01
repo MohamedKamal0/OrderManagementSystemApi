@@ -5,15 +5,15 @@ using System.Text;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
-namespace OrderManagementSystemApplication.Enums
+namespace OrderManagementSystemDomain.Enums
 {
     [JsonConverter(typeof(JsonStringEnumConverter))]
-    public enum OrderStatus
+    public enum RefundMethod
     {
-        Pending = 1,
-        Processing = 2,
-        Shipped = 3,
-        Delivered = 4,
-        Canceled = 5
+        Original,   // Refund back to the original payment method
+        PayPal,
+        Stripe,
+        BankTransfer,
+        Manual
     }
 }

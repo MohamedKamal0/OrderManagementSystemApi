@@ -18,12 +18,10 @@
     </PackageReference>
   </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\OrderManagementSystemDomain\OrderManagementSystemDomain.csproj" />
-  </ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\OrderManagementSystemDomain\OrderManagementSystemDomain.csproj" />
+		<ProjectReference Include="..\OrderManagementSystemApplication\OrderManagementSystemApplication.csproj" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Configrations\" />
-  </ItemGroup>
 
 </Project>
