@@ -31,7 +31,6 @@ namespace OrderManagementSystemApi.Controllers
             }
             return Ok(response);
         }
-        // Updates customer details.
         [HttpPut("UpdateCustomer")]
         public async Task<ActionResult<ApiResponse<ConfirmationResponseDto>>> UpdateCustomer([FromBody] CustomerUpdateDto customerDto)
         {
@@ -42,7 +41,6 @@ namespace OrderManagementSystemApi.Controllers
             }
             return Ok(response);
         }
-        // Deletes a customer by ID.
         [HttpDelete("DeleteCustomer/{id}")]
         public async Task<ActionResult<ApiResponse<ConfirmationResponseDto>>> DeleteCustomer(int id)
         {

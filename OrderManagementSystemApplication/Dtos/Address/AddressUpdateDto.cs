@@ -1,20 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace OrderManagementSystemDomain.Models
+namespace OrderManagementSystemApplication.Dtos.Address
 {
-    public class Address
+    public class AddressUpdateDto
     {
-        public int Id { get; set; }
-        [Required]
+        [Required(ErrorMessage = "AddressId is required.")]
+        public int AddressId { get; set; }
+        [Required(ErrorMessage = "CustomerId is required.")]
         public int CustomerId { get; set; }
-        [ForeignKey("CustomerId")]
-        public Customer Customer { get; set; }
         [Required(ErrorMessage = "Address Line 1 is required.")]
         [StringLength(100, ErrorMessage = "Address Line 1 cannot exceed 100 characters.")]
         public string AddressLine { get; set; }
@@ -25,6 +23,7 @@ namespace OrderManagementSystemDomain.Models
         [StringLength(50, ErrorMessage = "State cannot exceed 50 characters.")]
         public string State { get; set; }
         [Required(ErrorMessage = "Postal Code is required.")]
+        [RegularExpression(@"^\d{4,6}$", ErrorMessage = "Invalid Postal Code.")]
         public string PostalCode { get; set; }
     }
 }

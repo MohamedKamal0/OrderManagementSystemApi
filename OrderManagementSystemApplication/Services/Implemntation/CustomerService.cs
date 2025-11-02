@@ -25,7 +25,6 @@ namespace OrderManagementSystemApplication.Services.Implemntation
                 customer.IsActive = false;
                 await _repository.DeleteAsync(customer);
 
-                // Prepare confirmation message
                 var confirmationMessage = new ConfirmationResponseDto
                 {
                     Message = $"Customer with Id {id} deleted successfully."
@@ -34,7 +33,6 @@ namespace OrderManagementSystemApplication.Services.Implemntation
             }
             catch (Exception ex)
             {
-                // Log the exception
                 return new ApiResponse<ConfirmationResponseDto>
                     (500, $"An unexpected error occurred while processing your request, Error: {ex.Message}");
 
@@ -52,7 +50,6 @@ namespace OrderManagementSystemApplication.Services.Implemntation
                 {
                     return new ApiResponse<CustomerResponseDto>(404, "Customer not found.");
                 }
-                // Map to CustomerResponseDTO
                 var customerResponse = new CustomerResponseDto
                 {
                     Id = customer.Id,
@@ -66,7 +63,6 @@ namespace OrderManagementSystemApplication.Services.Implemntation
             }
             catch (Exception ex)
             {
-                // Log the exception
                 return new ApiResponse<CustomerResponseDto>(500, $"An unexpected error occurred while processing your request, Error: {ex.Message}");
             }
         }
@@ -90,7 +86,6 @@ namespace OrderManagementSystemApplication.Services.Implemntation
 
                 await _repository.AddAsync(customer);
 
-             //   _repository.SaveChangesAsync();
                 var customerResponse = new CustomerResponseDto
                 {
                     Id = customer.Id,
@@ -118,19 +113,16 @@ namespace OrderManagementSystemApplication.Services.Implemntation
                 {
                     return new ApiResponse<ConfirmationResponseDto>(404, "Customer not found.");
                 }
-                // Check if email is being updated to an existing one
                 if (customer.Email != customerDto.Email && await _repository.GetTableNoTracking().AnyAsync(c => c.Email == customerDto.Email))
                 {
                     return new ApiResponse<ConfirmationResponseDto>(400, "Email is already in use.");
                 }
-                // Update customer properties manually
                 customer.FirstName = customerDto.FirstName;
                 customer.LastName = customerDto.LastName;
                 customer.Email = customerDto.Email;
                 customer.PhoneNumber = customerDto.PhoneNumber;
                 customer.DateOfBirth = customerDto.DateOfBirth;
                 await _repository.SaveChangesAsync();
-                // Prepare confirmation message
                 var confirmationMessage = new ConfirmationResponseDto
                 {
                     Message = $"Customer with Id {customerDto.CustomerId} updated successfully."
@@ -139,7 +131,7 @@ namespace OrderManagementSystemApplication.Services.Implemntation
             }
             catch (Exception ex)
             {
-                // Log the exception
+                
                 return new ApiResponse<ConfirmationResponseDto>(500, $"An unexpected error occurred while processing your request, Error: {ex.Message}");
             }
         }
