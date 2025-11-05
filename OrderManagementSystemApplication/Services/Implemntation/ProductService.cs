@@ -20,12 +20,10 @@ namespace OrderManagementSystemApplication.Services.Implemntation
 
             try
             {
-                // Check if product name already exists
                 if (await _productRepository.GetTableNoTracking()
                     .AnyAsync(p => p.Name.ToLower() == productDto.Name.ToLower()))
                     return new ApiResponse<ProductResponseDto>(400, "Product name already exists.");
 
-                // Check if category exists
                 if (!await _categoryRepository.GetTableNoTracking()
                     .AnyAsync(c => c.Id == productDto.CategoryId))
                     return new ApiResponse<ProductResponseDto>(400, "Specified category does not exist.");

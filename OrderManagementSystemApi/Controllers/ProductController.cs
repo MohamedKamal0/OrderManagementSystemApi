@@ -21,7 +21,6 @@ namespace OrderManagementSystemApi.Controllers
             }
             return Ok(response);
         }
-        // Retrieves a product by ID.
         [HttpGet("GetProductById/{id}")]
         public async Task<ActionResult<ApiResponse<ProductResponseDto>>> GetProductById(int id)
         {
@@ -33,7 +32,6 @@ namespace OrderManagementSystemApi.Controllers
             return Ok(response);
         }
         
-        // Deletes a product by ID.
         [HttpDelete("DeleteProduct/{id}")]
         public async Task<ActionResult<ApiResponse<ConfirmationResponseDto>>> DeleteProduct(int id)
         {
@@ -44,7 +42,6 @@ namespace OrderManagementSystemApi.Controllers
             }
             return Ok(response);
         }
-        // Retrieves all products.
         [HttpGet("GetAllProducts")]
         public async Task<ActionResult<ApiResponse<List<ProductResponseDto>>>> GetAllProducts()
         {
@@ -55,7 +52,6 @@ namespace OrderManagementSystemApi.Controllers
             }
             return Ok(response);
         }
-        // Retrieves all products by category.
         [HttpGet("GetAllProductsByCategory/{categoryId}")]
         public async Task<ActionResult<ApiResponse<List<ProductResponseDto>>>> GetAllProductsByCategory(int categoryId)
         {
@@ -66,7 +62,6 @@ namespace OrderManagementSystemApi.Controllers
             }
             return Ok(response);
         }
-        // Update Product Status
         [HttpPut("UpdateProductStatus")]
         public async Task<ActionResult<ApiResponse<ConfirmationResponseDto>>> UpdateProductStatus(ProductStatusUpdateDto productStatusUpdateDTO)
         {

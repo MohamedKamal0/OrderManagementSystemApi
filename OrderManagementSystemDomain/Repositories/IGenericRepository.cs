@@ -20,6 +20,8 @@ namespace OrderManagementSystemDomain.Repositories
         Task<T> AddAsync(T entity);
         Task UpdateAsync(T entity);
         Task DeleteAsync(T entity);
+        Task DeleteRangeAsync(ICollection<T> entities);
+
         Task<T> SingleOrDefaultAsync(Expression<Func<T, bool>> predicate);
 
     }

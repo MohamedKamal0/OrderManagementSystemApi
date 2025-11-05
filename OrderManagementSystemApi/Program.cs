@@ -23,7 +23,9 @@ builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<IProductRepository, ProductRepository>();
 builder.Services.AddScoped<IProductService, ProductService>();
-
+builder.Services.AddScoped<IShoppingRepository, ShoppingRepository>();
+builder.Services.AddScoped<IShoppingService, ShoppingService>();
+builder.Services.AddScoped<ICartItemsRepository, CartItemsRepository>();
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnstring")));
 var app = builder.Build();

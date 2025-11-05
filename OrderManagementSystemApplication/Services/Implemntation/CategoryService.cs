@@ -19,7 +19,6 @@ namespace OrderManagementSystemApplication.Services.Implemntation
         {
             try
             {
-                // Check if category name already exists (case-insensitive)
                 if (await _categoryRepository.GetTableNoTracking().AnyAsync(c => c.Name.ToLower() == categoryDto.Name.ToLower()))
                 {
                     return new ApiResponse<CategoryResponseDto>(400, "Category name already exists.");
