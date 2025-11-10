@@ -23,7 +23,6 @@ namespace OrderManagementSystemApi.Controllers
             }
             return Ok(response);
         }
-        // Retrieves an address by ID.
         [HttpGet("GetAddressById/{id}")]
         public async Task<ActionResult<ApiResponse<AddressResponseDto>>> GetAddressById(int id)
         {
@@ -34,7 +33,6 @@ namespace OrderManagementSystemApi.Controllers
             }
             return Ok(response);
         }
-        // Updates an existing address.
         [HttpPut("UpdateAddress")]
         public async Task<ActionResult<ApiResponse<ConfirmationResponseDto>>> UpdateAddress([FromBody] AddressUpdateDto addressDto)
         {
@@ -45,7 +43,6 @@ namespace OrderManagementSystemApi.Controllers
             }
             return Ok(response);
         }
-        // Deletes an address by ID.
         [HttpDelete("DeleteAddress")]
         public async Task<ActionResult<ApiResponse<ConfirmationResponseDto>>> DeleteAddress([FromBody] AddressDeleteDto addressDeleteDTO)
         {
@@ -56,7 +53,6 @@ namespace OrderManagementSystemApi.Controllers
             }
             return Ok(response);
         }
-        // Retrieves all addresses for a specific customer.
         [HttpGet("GetAddressesByCustomer/{customerId}")]
         public async Task<ActionResult<ApiResponse<List<AddressResponseDto>>>> GetAddressesByCustomer(int customerId)
         {

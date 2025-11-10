@@ -1,5 +1,6 @@
 using System;
 using Microsoft.EntityFrameworkCore;
+using OrderManagementSystemApplication.Maping;
 using OrderManagementSystemApplication.Services.Abstract;
 using OrderManagementSystemApplication.Services.Implemntation;
 using OrderManagementSystemDomain.Repositories;
@@ -9,6 +10,7 @@ using OrderManagementSystemInfrastructure.Repository;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+builder.Services.AddAutoMapper(typeof(CartMappingProfile));
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -25,6 +27,9 @@ builder.Services.AddScoped<IProductRepository, ProductRepository>();
 builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<IShoppingRepository, ShoppingRepository>();
 builder.Services.AddScoped<IShoppingService, ShoppingService>();
+builder.Services.AddScoped<IOrderItemRepository, OrderItemRepository>();
+builder.Services.AddScoped<IOrderRepository, OrderRepository>();
+builder.Services.AddScoped<IOrderService, OrderService>();
 builder.Services.AddScoped<ICartItemsRepository, CartItemsRepository>();
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnstring")));

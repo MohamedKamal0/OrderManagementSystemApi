@@ -7,9 +7,9 @@ using OrderManagementSystemDomain.Models;
 
 namespace OrderManagementSystemDomain.Repositories
 {
-    public interface ICustomerRepository : IGenericRepository<Customer>
+    public interface IOrderRepository:IGenericRepository<Order>
     {
-        Task<Customer?> GetCustomerWithOrdersAsync(int customerId);
+        Task<Order?> GetOrderWithDetailsAsync(int orderId);
 
     }
 }

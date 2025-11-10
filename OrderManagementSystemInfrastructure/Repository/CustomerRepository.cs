@@ -22,6 +22,15 @@ namespace OrderManagementSystemInfrastructure.Repository
 
         }
 
-        
+        public async Task<Customer?> GetCustomerWithOrdersAsync(int customerId)
+        {
+            return await _customers
+                .Include(c => c.Orders)
+                    .ThenInclude(o => o.OrderItems)
+                    .ThenInclude(oi => oi.Product)
+                .Include(c => c.Addresses)
+                .AsNoTracking()
+                .FirstOrDefaultAsync(c => c.Id == customerId);
+        }
     }
 }
