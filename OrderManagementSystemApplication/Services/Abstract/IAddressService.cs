@@ -11,7 +11,7 @@ namespace OrderManagementSystemApplication.Services.Abstract
 {
     public interface IAddressService
     {
-        Task<ApiResponse<AddressResponseDto>> CreateAddressAsync(AddressCreateDto addressDto);
+        Task<ApiResponse<ConfirmationResponseDto>> CreateAddressAsync(AddressCreateDto addressDto);
         Task<ApiResponse<AddressResponseDto>> GetAddressByIdAsync(int id);
         Task<ApiResponse<ConfirmationResponseDto>> UpdateAddressAsync(AddressUpdateDto addressDto);
         Task<ApiResponse<ConfirmationResponseDto>> DeleteAddressAsync(AddressDeleteDto addressDeleteDTO);
