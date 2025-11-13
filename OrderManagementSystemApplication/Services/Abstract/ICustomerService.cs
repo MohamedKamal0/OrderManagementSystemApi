@@ -11,11 +11,11 @@ namespace OrderManagementSystemApplication.Services.Abstract
 {
     public interface ICustomerService
     {
-        Task<ApiResponse<CustomerResponseDto>> RegisterCustomerAsync(CustomerRegistrationDto customerDto);
+        Task<ApiResponse<String>> RegisterCustomerAsync(CustomerRegistrationDto customerDto);
        // Task<ApiResponse<LoginResponseDTO>> LoginAsync(LoginDTO loginDto);
         Task<ApiResponse<CustomerResponseDto>> GetCustomerByIdAsync(int id);
-        Task<ApiResponse<ConfirmationResponseDto>> UpdateCustomerAsync(CustomerUpdateDto customerDto);
-        Task<ApiResponse<ConfirmationResponseDto>> DeleteCustomerAsync(int id);
+        Task<ApiResponse<string>> UpdateCustomerAsync(CustomerUpdateDto customerDto);
+        Task<ApiResponse<String>> DeleteCustomerAsync(int id);
        // Task<ApiResponse<ConfirmationResponseDto>> ChangePasswordAsync(ChangePasswordDto changePasswordDto);
 
     }

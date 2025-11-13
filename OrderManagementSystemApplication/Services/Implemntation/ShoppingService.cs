@@ -1,13 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using AutoMapper;
-using Microsoft.EntityFrameworkCore;
+﻿using AutoMapper;
+using Microsoft.Extensions.Logging;
 using OrderManagementSystemApplication.BaseResponse;
 using OrderManagementSystemApplication.Dtos;
 using OrderManagementSystemApplication.Dtos.ShoppingCartDto;
+using OrderManagementSystemApplication.Helpers;
 using OrderManagementSystemApplication.Services.Abstract;
 using OrderManagementSystemDomain.Models;
 using OrderManagementSystemDomain.Repositories;
@@ -15,56 +11,58 @@ using OrderManagementSystemDomain.Repositories;
 namespace OrderManagementSystemApplication.Services.Implemntation
 {
     public class ShoppingService(IShoppingRepository _shoppingRepository,
-        IProductRepository _productRepository,ICartItemsRepository _cartItemsRepository,IMapper _mapper) : IShoppingService
+        IProductRepository _productRepository, ICartItemsRepository _cartItemsRepository,
+        IMapper _mapper, ResponseHandler _responseHandler, ILogger<ShoppingService> _logger) : IShoppingService
     {
-        public async Task<ApiResponse<ShoppingResponseDto>> AddToCartAsync(AddShoppingDto addToCartDTO)
+        public async Task<ApiResponse<string>> AddToCartAsync(AddShoppingDto addToCartDto)
         {
-            var transaction =  _shoppingRepository.BeginTransaction(); 
+            var transaction = _shoppingRepository.BeginTransaction();
 
             try
             {
-                
-                var product = await _productRepository.GetByIdAsync(addToCartDTO.ProductId);
+                var product = await _productRepository.GetByIdAsync(addToCartDto.ProductId);
                 if (product == null)
                 {
-                    
-                    return new ApiResponse<ShoppingResponseDto>(404, "Product not found.");
+                    _logger.LogWarning(ShoppingCartLogMessages.ProductNotFound, addToCartDto.ProductId);
+                    return _responseHandler.NotFound<string>("Product not found.");
                 }
-            
-                if (addToCartDTO.Quantity > product.StockQuantity)
+
+                if (addToCartDto.Quantity > product.StockQuantity)
                 {
-                    return new ApiResponse<ShoppingResponseDto>(400, $"Only {product.StockQuantity} units of {product.Name} are available.");
+                    _logger.LogWarning(ShoppingCartLogMessages.InsufficientStock,
+                            addToCartDto.ProductId, addToCartDto.Quantity, product.StockQuantity);
+                    return _responseHandler.BadRequest<string>($"Only {product.StockQuantity} units of {product.Name} are available.");
                 }
-                var cart = await _shoppingRepository.GetActiveCartByCustomerAsync(addToCartDTO.CustomerId);
-              
+                var cart = await _shoppingRepository.GetActiveCartByCustomerAsync(addToCartDto.CustomerId);
+
                 if (cart == null)
                 {
                     cart = new Cart
                     {
-                        CustomerId = addToCartDTO.CustomerId,
+                        CustomerId = addToCartDto.CustomerId,
                         IsCheckedOut = false,
                         CreatedAt = DateTime.UtcNow,
                         UpdatedAt = DateTime.UtcNow,
                         CartItems = new List<CartItem>()
                     };
-                 await _shoppingRepository.AddAsync(cart);
-                   await _shoppingRepository.SaveChangesAsync();
+                    await _shoppingRepository.AddAsync(cart);
+                    await _shoppingRepository.SaveChangesAsync();
                 }
 
-                var existingCartItem = cart.CartItems.FirstOrDefault(ci => ci.ProductId == addToCartDTO.ProductId);
+                var existingCartItem = cart.CartItems.FirstOrDefault(ci => ci.ProductId == addToCartDto.ProductId);
                 if (existingCartItem != null)
                 {
 
-                    if (existingCartItem.Quantity + addToCartDTO.Quantity > product.StockQuantity)
+                    if (existingCartItem.Quantity + addToCartDto.Quantity > product.StockQuantity)
                     {
-                        return new ApiResponse<ShoppingResponseDto>(400, $"Adding {addToCartDTO.Quantity} exceeds available stock.");
+                        return _responseHandler.BadRequest<string>($"Adding {addToCartDto.Quantity} exceeds available stock.");
                     }
-                
-                    existingCartItem.Quantity += addToCartDTO.Quantity;
+
+                    existingCartItem.Quantity += addToCartDto.Quantity;
                     existingCartItem.TotalPrice = (existingCartItem.UnitPrice - existingCartItem.Discount) * existingCartItem.Quantity;
                     existingCartItem.UpdatedAt = DateTime.UtcNow;
 
-                  await _cartItemsRepository.UpdateAsync(existingCartItem);
+                    await _cartItemsRepository.UpdateAsync(existingCartItem);
                 }
                 else
                 {
@@ -74,10 +72,10 @@ namespace OrderManagementSystemApplication.Services.Implemntation
                     {
                         CartId = cart.Id,
                         ProductId = product.Id,
-                        Quantity = addToCartDTO.Quantity,
+                        Quantity = addToCartDto.Quantity,
                         UnitPrice = product.Price,
                         Discount = discount,
-                        TotalPrice = (product.Price - discount) * addToCartDTO.Quantity,
+                        TotalPrice = (product.Price - discount) * addToCartDto.Quantity,
                         CreatedAt = DateTime.UtcNow,
                         UpdatedAt = DateTime.UtcNow
                     };
@@ -87,20 +85,27 @@ namespace OrderManagementSystemApplication.Services.Implemntation
                 cart.UpdatedAt = DateTime.UtcNow;
                 await _shoppingRepository.UpdateAsync(cart);
 
-                product.StockQuantity -= addToCartDTO.Quantity;
+                product.StockQuantity -= addToCartDto.Quantity;
                 await _productRepository.UpdateAsync(product);
 
                 await _shoppingRepository.SaveChangesAsync();
-                await transaction.CommitAsync();  
+                await transaction.CommitAsync();
 
                 cart = await _shoppingRepository.GetCartByIdAsync(cart.Id);
                 var cartDTO = _mapper.Map<ShoppingResponseDto>(cart);
+                _logger.LogInformation(ShoppingCartLogMessages.TransactionCommitted, addToCartDto.CustomerId);
 
-                return new ApiResponse<ShoppingResponseDto>(200, cartDTO);
+                return _responseHandler.Created("Created Successfully.");
             }
             catch (Exception ex)
             {
-                return new ApiResponse<ShoppingResponseDto>(500, $"An unexpected error occurred while processing your request, Error: {ex.Message}");
+                await transaction.RollbackAsync();
+                _logger.LogError(ex, ShoppingCartLogMessages.ErrorAddingToCart,
+                    addToCartDto.CustomerId, addToCartDto.ProductId);
+                _logger.LogInformation(ShoppingCartLogMessages.TransactionRolledBack, addToCartDto.CustomerId);
+
+                return _responseHandler.InternalServerError<string>(
+                    "An error occurred while adding product to cart.");
             }
         }
         public async Task<ApiResponse<ConfirmationResponseDto>> ClearCartAsync(int customerId)
@@ -108,26 +113,31 @@ namespace OrderManagementSystemApplication.Services.Implemntation
             try
             {
                 var cart = await _shoppingRepository.GetCartByIdAsync(customerId);
-                
+
                 if (cart == null)
                 {
-                    return new ApiResponse<ConfirmationResponseDto>(404, "Active cart not found.");
+                    _logger.LogWarning(ShoppingCartLogMessages.CartNotFound, customerId);
+                    return _responseHandler.NotFound<ConfirmationResponseDto>("Active cart not found.");
                 }
                 if (cart.CartItems.Any())
                 {
-                   await _cartItemsRepository.DeleteRangeAsync(cart.CartItems);
+                    await _cartItemsRepository.DeleteRangeAsync(cart.CartItems);
                     cart.UpdatedAt = DateTime.UtcNow;
                     await _cartItemsRepository.SaveChangesAsync();
                 }
+                _logger.LogInformation(ShoppingCartLogMessages.CartCleared, customerId);
+
                 var confirmation = new ConfirmationResponseDto
                 {
                     Message = "Cart has been cleared successfully."
                 };
-                return new ApiResponse<ConfirmationResponseDto>(200, confirmation);
+                return _responseHandler.Success(confirmation);
             }
             catch (Exception ex)
             {
-                return new ApiResponse<ConfirmationResponseDto>(500, $"An unexpected error occurred while processing your request, Error: {ex.Message}");
+                _logger.LogError(ex, ShoppingCartLogMessages.ErrorClearingCart, customerId);
+                return _responseHandler.InternalServerError<ConfirmationResponseDto>(
+                    "An error occurred while clearing the cart.");
             }
         }
 
@@ -136,9 +146,11 @@ namespace OrderManagementSystemApplication.Services.Implemntation
             try
             {
                 var cart = await _shoppingRepository.GetActiveCartByCustomerAsync(customerId);
-              
+
                 if (cart == null)
                 {
+                    _logger.LogInformation(ShoppingCartLogMessages.EmptyCartReturned, customerId);
+
                     var emptyCartDTO = new ShoppingResponseDto
                     {
                         CustomerId = customerId,
@@ -150,46 +162,60 @@ namespace OrderManagementSystemApplication.Services.Implemntation
                         TotalDiscount = 0,
                         TotalAmount = 0
                     };
-                    return new ApiResponse<ShoppingResponseDto>(200, emptyCartDTO);
+                    return _responseHandler.Success(emptyCartDTO);
                 }
                 var cartDTO = _mapper.Map<ShoppingResponseDto>(cart);
-                return new ApiResponse<ShoppingResponseDto>(200, cartDTO);
+                _logger.LogInformation(ShoppingCartLogMessages.CartRetrieved,
+                       customerId, cart.CartItems.Count);
+                return _responseHandler.Success(cartDTO);
             }
             catch (Exception ex)
             {
-                return new ApiResponse<ShoppingResponseDto>(500, $"An unexpected error occurred while processing your request, Error: {ex.Message}");
+                _logger.LogError(ex, "Error retrieving cart for customer {CustomerId}", customerId);
+                return _responseHandler.InternalServerError<ShoppingResponseDto>(
+                    "An error occurred while retrieving the cart.");
             }
         }
-        public async Task<ApiResponse<ShoppingResponseDto>> RemoveCartItemAsync(RemoveShoppingItemDto removeCartItemDTO)
+        public async Task<ApiResponse<string>> RemoveCartItemAsync(RemoveShoppingItemDto removeCartItemDto)
         {
             try
             {
-                var cart = await _shoppingRepository.GetActiveCartByCustomerAsync(removeCartItemDTO.CustomerId);
-                   
+                var cart = await _shoppingRepository.GetActiveCartByCustomerAsync(removeCartItemDto.CustomerId);
+
                 if (cart == null)
                 {
-                    return new ApiResponse<ShoppingResponseDto>(404, "Active cart not found.");
+                    _logger.LogWarning(ShoppingCartLogMessages.CartNotFound, removeCartItemDto.CustomerId);
+                    return _responseHandler.NotFound<string>("Active cart not found.");
                 }
-                var cartItem = cart.CartItems.FirstOrDefault(ci => ci.Id == removeCartItemDTO.CartItemId);
+                var cartItem = cart.CartItems.FirstOrDefault(ci => ci.Id == removeCartItemDto.CartItemId);
                 if (cartItem == null)
                 {
-                    return new ApiResponse<ShoppingResponseDto>(404, "Cart item not found.");
+                    _logger.LogWarning(ShoppingCartLogMessages.CartItemNotFound, removeCartItemDto.CartItemId);
+
+                    return _responseHandler.NotFound<string>("Cart item not found.");
                 }
-             await   _cartItemsRepository.DeleteAsync(cartItem);
+                await _cartItemsRepository.DeleteAsync(cartItem);
                 cart.UpdatedAt = DateTime.UtcNow;
                 await _cartItemsRepository.SaveChangesAsync();
-                cart = await _shoppingRepository.GetCartByIdAsync(removeCartItemDTO.CartItemId);
-            
+                cart = await _shoppingRepository.GetCartByIdAsync(removeCartItemDto.CartItemId);
+
                 var cartDTO = _mapper.Map<ShoppingResponseDto>(cart);
-                return new ApiResponse<ShoppingResponseDto>(200, cartDTO);
+                _logger.LogInformation(ShoppingCartLogMessages.CartItemRemoved,
+                      removeCartItemDto.CartItemId, removeCartItemDto.CustomerId);
+
+                return _responseHandler.Deleted<String>();
             }
             catch (Exception ex)
             {
-                return new ApiResponse<ShoppingResponseDto>(500, $"An unexpected error occurred while processing your request, Error: {ex.Message}");
+                _logger.LogError(ex, ShoppingCartLogMessages.ErrorRemovingCartItem,
+                    removeCartItemDto.CartItemId, removeCartItemDto.CustomerId);
+
+                return _responseHandler.InternalServerError<string>(
+                    "An error occurred while removing the cart item.");
             }
         }
 
-        public Task<ApiResponse<ShoppingResponseDto>> UpdateCartItemAsync(UpdateShopingItemDto updateCartItemDTO)
+        public Task<ApiResponse<string>> UpdateCartItemAsync(UpdateShopingItemDto updateCartItemDTO)
         {
             throw new NotImplementedException();
         }

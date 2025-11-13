@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -8,37 +9,36 @@ namespace OrderManagementSystemApplication.BaseResponse
 {
     public class ApiResponse<T>
     {
-        // HTTP status code of the response.
-        public int StatusCode { get; set; }
-        // Indicates whether the request was successful.
-        public bool Success { get; set; }
-        // Response data in case successful
-        public T Data { get; set; }
-        // List of error messages, if any.
-        public List<string> Errors { get; set; }
         public ApiResponse()
         {
-            Success = true;
-            Errors = new List<string>();
+
         }
-        public ApiResponse(int statusCode, T data)
+        public ApiResponse(T data, string message = null)
         {
-            StatusCode = statusCode;
-            Success = true;
+            Succeeded = true;
+            Message = message;
             Data = data;
-            Errors = new List<string>();
         }
-        public ApiResponse(int statusCode, List<string> errors)
+        public ApiResponse(string message)
         {
-            StatusCode = statusCode;
-            Success = false;
-            Errors = errors;
+            Succeeded = false;
+            Message = message;
         }
-        public ApiResponse(int statusCode, string error)
+        public ApiResponse(string message, bool succeeded)
         {
-            StatusCode = statusCode;
-            Success = false;
-            Errors = new List<string> { error };
+            Succeeded = succeeded;
+            Message = message;
         }
+
+        public HttpStatusCode StatusCode { get; set; }
+        public object Meta { get; set; }
+
+        public bool Succeeded { get; set; }
+        public string Message { get; set; }
+        public List<string> Errors { get; set; }
+        public T Data { get; set; }
     }
+
+
+
 }

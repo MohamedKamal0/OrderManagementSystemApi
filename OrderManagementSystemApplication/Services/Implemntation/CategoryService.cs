@@ -3,50 +3,46 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using AutoMapper;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using OrderManagementSystemApplication.BaseResponse;
 using OrderManagementSystemApplication.Dtos;
 using OrderManagementSystemApplication.Dtos.Category;
+using OrderManagementSystemApplication.Helpers;
 using OrderManagementSystemApplication.Services.Abstract;
 using OrderManagementSystemDomain.Models;
 using OrderManagementSystemDomain.Repositories;
 
 namespace OrderManagementSystemApplication.Services.Implemntation
 {
-    public class CategoryService(ICategoryRepository _categoryRepository) : ICategoryService
+    public class CategoryService(ICategoryRepository _categoryRepository,
+        ResponseHandler _responseHandler,IMapper _mapper, ILogger<CategoryService> _logger) : ICategoryService
     {
-        public async Task<ApiResponse<CategoryResponseDto>> CreateCategoryAsync(CategoryCreateDto categoryDto)
+        public async Task<ApiResponse<string>> CreateCategoryAsync(CategoryCreateDto categoryDto)
         {
             try
             {
                 if (await _categoryRepository.GetTableNoTracking().AnyAsync(c => c.Name.ToLower() == categoryDto.Name.ToLower()))
                 {
-                    return new ApiResponse<CategoryResponseDto>(400, "Category name already exists.");
+                    _logger.LogWarning(CategoryLogMessages.CategoryNameConflict, categoryDto.Name);
+                    return _responseHandler.Conflict<string>("Category name already exists.");
                 }
-                var category = new Category
-                {
-                    Name = categoryDto.Name,
-                    Description = categoryDto.Description,
-                    IsActive = true
-                };
-              
+                var category = _mapper.Map<Category>(categoryDto);
+                category.IsActive = true;
                 await _categoryRepository.AddAsync(category);
-              
-                var categoryResponse = new CategoryResponseDto
-                {
-                   
-                    Name = category.Name,
-                    Description = category.Description,
-                    IsActive = category.IsActive
-                };
-                return new ApiResponse<CategoryResponseDto>(200, categoryResponse);
+
+                _logger.LogInformation(CategoryLogMessages.CategoryCreated, categoryDto.Name);
+                return _responseHandler.Created("Created Successfully.");
             }
-            catch (Exception ex)
+            catch (Exception ex) 
             {
-                return new ApiResponse<CategoryResponseDto>(500, $"An unexpected error occurred while processing your request, Error: {ex.Message}");
+                _logger.LogError(ex, CategoryLogMessages.ErrorCreatingCategory, categoryDto.Name);
+                return _responseHandler.InternalServerError<string>("An error occurred while creating the category.");
+
             }
         }
-        public Task<ApiResponse<ConfirmationResponseDto>> DeleteCategoryAsync(int id)
+        public Task<ApiResponse<string>> DeleteCategoryAsync(int id)
         {
             throw new NotImplementedException();
         }
@@ -58,17 +54,14 @@ namespace OrderManagementSystemApplication.Services.Implemntation
                 var categories = await _categoryRepository
                     .GetTableNoTracking()
                     .ToListAsync();
-                var categoryList = categories.Select(c => new CategoryResponseDto
-                {       
-                    Name = c.Name,
-                    Description = c.Description,
-                    IsActive = c.IsActive
-                }).ToList();
-                return new ApiResponse<List<CategoryResponseDto>>(200, categoryList);
+                var categoryList = _mapper.Map<List<CategoryResponseDto>>(categories);
+                _logger.LogInformation(CategoryLogMessages.CategoriesRetrieved, categories.Count);
+                return _responseHandler.Success(categoryList);
             }
             catch (Exception ex)
             {
-                return new ApiResponse<List<CategoryResponseDto>>(500, $"An unexpected error occurred while processing your request, Error: {ex.Message}");
+                _logger.LogError(ex, CategoryLogMessages.ErrorRetrievingCategories);
+                return _responseHandler.InternalServerError<List<CategoryResponseDto>>("An error occurred while retrieving categories.");
             }
         }
 

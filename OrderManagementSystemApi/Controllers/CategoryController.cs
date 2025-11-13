@@ -14,20 +14,14 @@ namespace OrderManagementSystemApi.Controllers
         public async Task<ActionResult<ApiResponse<CategoryResponseDto>>> CreateCategory([FromBody] CategoryCreateDto categoryDto)
         {
             var response = await _categoryService.CreateCategoryAsync(categoryDto);
-            if (response.StatusCode != 200)
-            {
-                return StatusCode(response.StatusCode, response);
-            }
+            
             return Ok(response);
         }
         [HttpGet("GetAllCategories")]
         public async Task<ActionResult<ApiResponse<List<CategoryResponseDto>>>> GetAllCategories()
         {
             var response = await _categoryService.GetAllCategoriesAsync();
-            if (response.StatusCode != 200)
-            {
-                return StatusCode(response.StatusCode, response);
-            }
+           
             return Ok(response);
         }
     }

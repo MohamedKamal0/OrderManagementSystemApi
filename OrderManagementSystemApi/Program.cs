@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using OrderManagementSystemApplication.BaseResponse;
 using OrderManagementSystemApplication.Maping;
 using OrderManagementSystemApplication.Services.Abstract;
 using OrderManagementSystemApplication.Services.Implemntation;
@@ -30,6 +31,7 @@ builder.Host.UseSerilog((context, services, configuration) =>
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddScoped<ResponseHandler>();
 builder.Services.AddScoped<ICustomerService, CustomerService>();
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();

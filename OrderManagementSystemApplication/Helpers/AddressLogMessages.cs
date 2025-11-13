@@ -17,6 +17,7 @@ namespace OrderManagementSystemApplication.Helpers
         public const string ErrorCreatingAddress = "Error creating address for Customer {CustomerId}.";
         public const string ErrorUpdatingAddress = "Error updating address with Id {AddressId} for Customer {CustomerId}.";
         public const string ErrorDeletingAddress = "Error deleting address with Id {AddressId} for Customer {CustomerId}.";
+        public const string ErrorRetrievingAddress = "Error occurred while retrieving Address {CustomerId}.";
 
     }
 }

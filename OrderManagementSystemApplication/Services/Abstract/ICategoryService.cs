@@ -11,10 +11,10 @@ namespace OrderManagementSystemApplication.Services.Abstract
 {
     public interface ICategoryService
     {
-        Task<ApiResponse<CategoryResponseDto>> CreateCategoryAsync(CategoryCreateDto categoryDto);
+        Task<ApiResponse<string>> CreateCategoryAsync(CategoryCreateDto categoryDto);
         Task<ApiResponse<CategoryResponseDto>> GetCategoryByIdAsync(int id);
         Task<ApiResponse<List<CategoryResponseDto>>> GetAllCategoriesAsync();
-        Task<ApiResponse<ConfirmationResponseDto>> DeleteCategoryAsync(int id);
+        Task<ApiResponse<string>> DeleteCategoryAsync(int id);
 
     }
 }

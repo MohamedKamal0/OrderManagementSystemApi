@@ -11,9 +11,9 @@ namespace OrderManagementSystemApplication.Services.Abstract
 {
     public interface IOrderService
     {
-        Task<ApiResponse<OrderResponseDto>> CreateOrderAsync(OrderCreateDto orderDto);
+        Task<ApiResponse<string>> CreateOrderAsync(OrderCreateDto orderDto);
          Task<ApiResponse<OrderResponseDto>> GetOrderByIdAsync(int orderId);
         Task<ApiResponse<List<OrderResponseDto>>> GetOrdersByCustomerAsync(int customerId);
-         Task<ApiResponse<ConfirmationResponseDto>> UpdateOrderStatusAsync(OrderStatusUpdateDto statusDto);
+         Task<ApiResponse<string>> UpdateOrderStatusAsync(OrderStatusUpdateDto statusDto);
     }
 }

@@ -1,41 +1,44 @@
 ﻿
+using AutoMapper;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using OrderManagementSystemApplication.BaseResponse;
 using OrderManagementSystemApplication.Dtos;
 using OrderManagementSystemApplication.Dtos.Customer;
+using OrderManagementSystemApplication.Helpers;
 using OrderManagementSystemApplication.Services.Abstract;
 using OrderManagementSystemDomain.Models;
 using OrderManagementSystemDomain.Repositories;
 using Org.BouncyCastle.Crypto.Generators;
 namespace OrderManagementSystemApplication.Services.Implemntation
 {
-    public class CustomerService(ICustomerRepository _repository) : ICustomerService
+    public class CustomerService(ICustomerRepository _repository, 
+        ResponseHandler _responseHandler,IMapper _mapper, ILogger<CustomerService> _logger) : ICustomerService
     {
-        public async Task<ApiResponse<ConfirmationResponseDto>> DeleteCustomerAsync(int id)
+        public async Task<ApiResponse<string>> DeleteCustomerAsync(int id)
         {
             try
             {
                 var customer = await _repository.GetTableNoTracking()
-                .FirstOrDefaultAsync(c => c.Id == id);
+                    .FirstOrDefaultAsync(c => c.Id == id);
+
                 if (customer == null)
                 {
-                    return new ApiResponse<ConfirmationResponseDto>(404, "Customer not found.");
+                    _logger.LogWarning(CustomerLogMessages.CustomerNotFound, id);
+                    return _responseHandler.NotFound<string>("Customer not found.");
                 }
-                //Soft Delete
+
+                // Soft Delete
                 customer.IsActive = false;
                 await _repository.DeleteAsync(customer);
 
-                var confirmationMessage = new ConfirmationResponseDto
-                {
-                    Message = $"Customer with Id {id} deleted successfully."
-                };
-                return new ApiResponse<ConfirmationResponseDto>(200, confirmationMessage);
+                _logger.LogInformation(CustomerLogMessages.CustomerDeleted, id);
+                return _responseHandler.Deleted<string>();
             }
             catch (Exception ex)
             {
-                return new ApiResponse<ConfirmationResponseDto>
-                    (500, $"An unexpected error occurred while processing your request, Error: {ex.Message}");
-
+                _logger.LogError(ex, CustomerLogMessages.ErrorDeletingCustomer, id);
+                return _responseHandler.InternalServerError<string>("Error deleting customer.");
             }
         }
 
@@ -44,96 +47,85 @@ namespace OrderManagementSystemApplication.Services.Implemntation
             try
             {
                 var customer = await _repository.GetTableNoTracking()
+                    .FirstOrDefaultAsync(c => c.Id == id && c.IsActive);
 
-                .FirstOrDefaultAsync(c => c.Id == id && c.IsActive == true);
                 if (customer == null)
                 {
-                    return new ApiResponse<CustomerResponseDto>(404, "Customer not found.");
+                    _logger.LogWarning(CustomerLogMessages.CustomerNotFound, id);
+                    return _responseHandler.NotFound<CustomerResponseDto>("Customer not found.");
                 }
-                var customerResponse = new CustomerResponseDto
-                {
-                    Id = customer.Id,
-                    FirstName = customer.FirstName,
-                    LastName = customer.LastName,
-                    Email = customer.Email,
-                    PhoneNumber = customer.PhoneNumber,
-                    DateOfBirth = customer.DateOfBirth
-                };
-                return new ApiResponse<CustomerResponseDto>(200, customerResponse);
+
+                var customerResponse = _mapper.Map<CustomerResponseDto>(customer);
+
+                _logger.LogInformation(CustomerLogMessages.CustomerRetrieved, id);
+                return _responseHandler.Success(customerResponse);
             }
             catch (Exception ex)
             {
-                return new ApiResponse<CustomerResponseDto>(500, $"An unexpected error occurred while processing your request, Error: {ex.Message}");
+                _logger.LogError(ex, CustomerLogMessages.ErrorRetrievingCustomer, id);
+                return _responseHandler.InternalServerError<CustomerResponseDto>("Error retrieving customer.");
             }
         }
 
-        public async Task<ApiResponse<CustomerResponseDto>> RegisterCustomerAsync(CustomerRegistrationDto customerDto)
+        public async Task<ApiResponse<string>> RegisterCustomerAsync(CustomerRegistrationDto customerDto)
         {
             try
             {
-                if (await _repository.GetTableAsTracking().AnyAsync(c => c.Email.ToLower() == customerDto.Email.ToLower()))
-                    return new ApiResponse<CustomerResponseDto>(400, "Email is already in use.");
-
-                var customer = new Customer
+                if (await _repository.GetTableAsTracking()
+                    .AnyAsync(c => c.Email.ToLower() == customerDto.Email.ToLower()))
                 {
-                    FirstName = customerDto.FirstName,
-                    LastName = customerDto.LastName,
-                    Email = customerDto.Email,
-                    PhoneNumber = customerDto.PhoneNumber,
-                    DateOfBirth = customerDto.DateOfBirth,
-                    IsActive = true,
-                };
+                    _logger.LogWarning(CustomerLogMessages.EmailConflict, customerDto.Email);
+                    return _responseHandler.Conflict<string>("Email is already in use.");
+                }
+
+                var customer = _mapper.Map<Customer>(customerDto);
+                customer.IsActive = true;
 
                 await _repository.AddAsync(customer);
 
-                var customerResponse = new CustomerResponseDto
-                {
-                    Id = customer.Id,
-                    FirstName = customer.FirstName,
-                    LastName = customer.LastName,
-                    Email = customer.Email,
-                    PhoneNumber = customer.PhoneNumber,
-                    DateOfBirth = customer.DateOfBirth
-                };
-
-                return new ApiResponse<CustomerResponseDto>(200, customerResponse);
+                _logger.LogInformation(CustomerLogMessages.CustomerCreated, customer.Id);
+                return _responseHandler.Created<string>("Created successfully.");
             }
             catch (Exception ex)
             {
-                return new ApiResponse<CustomerResponseDto>(500, $"An unexpected error occurred: {ex.Message}");
+                _logger.LogError(ex, CustomerLogMessages.ErrorCreatingCustomer, customerDto.Email);
+                return _responseHandler.InternalServerError<string>("Error creating customer.");
             }
+        
         }
 
-        public async Task<ApiResponse<ConfirmationResponseDto>> UpdateCustomerAsync(CustomerUpdateDto customerDto)
+        public async Task<ApiResponse<string>> UpdateCustomerAsync(CustomerUpdateDto customerDto)
         {
+
             try
             {
                 var customer = await _repository.GetByIdAsync(customerDto.CustomerId);
                 if (customer == null)
                 {
-                    return new ApiResponse<ConfirmationResponseDto>(404, "Customer not found.");
+                    _logger.LogWarning(CustomerLogMessages.CustomerNotFound, customerDto.CustomerId);
+                    return _responseHandler.NotFound<string>("Customer not found.");
                 }
-                if (customer.Email != customerDto.Email && await _repository.GetTableNoTracking().AnyAsync(c => c.Email == customerDto.Email))
+
+                if (customer.Email != customerDto.Email &&
+                    await _repository.GetTableNoTracking()
+                        .AnyAsync(c => c.Email == customerDto.Email))
                 {
-                    return new ApiResponse<ConfirmationResponseDto>(400, "Email is already in use.");
+                    _logger.LogWarning(CustomerLogMessages.EmailConflict, customerDto.Email);
+                    return _responseHandler.Conflict<string>("Email is already in use.");
                 }
-                customer.FirstName = customerDto.FirstName;
-                customer.LastName = customerDto.LastName;
-                customer.Email = customerDto.Email;
-                customer.PhoneNumber = customerDto.PhoneNumber;
-                customer.DateOfBirth = customerDto.DateOfBirth;
+
+                _mapper.Map(customerDto, customer);
                 await _repository.SaveChangesAsync();
-                var confirmationMessage = new ConfirmationResponseDto
-                {
-                    Message = $"Customer with Id {customerDto.CustomerId} updated successfully."
-                };
-                return new ApiResponse<ConfirmationResponseDto>(200, confirmationMessage);
+
+                _logger.LogInformation(CustomerLogMessages.CustomerUpdated, customer.Id);
+                return _responseHandler.Updated("Updated successfully.");
             }
             catch (Exception ex)
             {
-                
-                return new ApiResponse<ConfirmationResponseDto>(500, $"An unexpected error occurred while processing your request, Error: {ex.Message}");
+                _logger.LogError(ex, CustomerLogMessages.ErrorUpdatingCustomer, customerDto.CustomerId);
+                return _responseHandler.InternalServerError<string>("Error updating customer.");
             }
         }
     }
-}
+    }
+

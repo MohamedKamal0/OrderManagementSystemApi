@@ -11,10 +11,10 @@ namespace OrderManagementSystemApplication.Services.Abstract
 {
     public interface IAddressService
     {
-        Task<ApiResponse<ConfirmationResponseDto>> CreateAddressAsync(AddressCreateDto addressDto);
+        Task<ApiResponse<string>> CreateAddressAsync(AddressCreateDto addressDto);
         Task<ApiResponse<AddressResponseDto>> GetAddressByIdAsync(int id);
-        Task<ApiResponse<ConfirmationResponseDto>> UpdateAddressAsync(AddressUpdateDto addressDto);
-        Task<ApiResponse<ConfirmationResponseDto>> DeleteAddressAsync(AddressDeleteDto addressDeleteDTO);
+        Task<ApiResponse<string>> UpdateAddressAsync(AddressUpdateDto addressDto);
+        Task<ApiResponse<string>> DeleteAddressAsync(AddressDeleteDto addressDeleteDTO);
         Task<ApiResponse<List<AddressResponseDto>>> GetAddressesByCustomerAsync(int customerId);
 
     }

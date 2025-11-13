@@ -11,13 +11,13 @@ namespace OrderManagementSystemApplication.Services.Abstract
 {
     public interface IProductService
     {
-        Task<ApiResponse<ProductResponseDto>> CreateProductAsync(ProductCreateDto productDto);
+        Task<ApiResponse<string>> CreateProductAsync(ProductCreateDto productDto);
         Task<ApiResponse<ProductResponseDto>> GetProductByIdAsync(int id);
         Task<ApiResponse<List<ProductResponseDto>>> GetAllProductsAsync();
         Task<ApiResponse<List<ProductResponseDto>>> GetAllProductsByCategoryAsync(int categoryId);
         // Task<ApiResponse<ConfirmationResponseDto>> UpdateProductAsync(ProductUpdateDto productDto);
-        Task<ApiResponse<ConfirmationResponseDto>> DeleteProductAsync(int id);
-        Task<ApiResponse<ConfirmationResponseDto>> UpdateProductStatusAsync(ProductStatusUpdateDto productStatusUpdateDTO);
+        Task<ApiResponse<string>> DeleteProductAsync(int id);
+        Task<ApiResponse<string>> UpdateProductStatusAsync(ProductStatusUpdateDto productStatusUpdateDTO);
 
     }
 }
