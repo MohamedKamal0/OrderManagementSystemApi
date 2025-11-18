@@ -25,22 +25,16 @@ namespace OrderManagementSystemApplication.Services.Implemntation
                 var customer = await _customerRepository.GetByIdAsync(orderDto.CustomerId);
                 if (customer == null)
                 {
-                    _logger.LogWarning(OrderLogMessages.CustomerNotFound, orderDto.CustomerId);
-
                     return _responseHandler.NotFound<string>("Customer does not exist.");
                 }
                 var billingAddress = await _addressRepository.GetByIdAsync(orderDto.BillingAddressId);
                 if (billingAddress == null || billingAddress.CustomerId != orderDto.CustomerId)
                 {
-                    _logger.LogWarning(OrderLogMessages.BillingAddressNotFound,
-                            orderDto.BillingAddressId, orderDto.CustomerId);
                     return _responseHandler.BadRequest<string>("Billing Address is invalid or does not belong to the customer.");
                 }
                 var shippingAddress = await _addressRepository.GetByIdAsync(orderDto.ShippingAddressId);
                 if (shippingAddress == null || shippingAddress.CustomerId != orderDto.CustomerId)
                 {
-                    _logger.LogWarning(OrderLogMessages.ShippingAddressNotFound,
-                           orderDto.ShippingAddressId, orderDto.CustomerId);
                     return _responseHandler.BadRequest<string>("Shipping Address is invalid or does not belong to the customer.");
                 }
                 decimal totalBaseAmount = 0;
@@ -60,8 +54,6 @@ namespace OrderManagementSystemApplication.Services.Implemntation
                     }
                     if (product.StockQuantity < itemDto.Quantity)
                     {
-                        _logger.LogWarning(OrderLogMessages.InsufficientStock,
-                                itemDto.ProductId, itemDto.Quantity, product.StockQuantity);
                         return _responseHandler.BadRequest<string>($"Insufficient stock for product {product.Name}.");
                     }
                     decimal basePrice = itemDto.Quantity * product.Price;
@@ -216,6 +208,8 @@ namespace OrderManagementSystemApplication.Services.Implemntation
                 return Math.Abs(BitConverter.ToInt32(bytes, 0) % (max - min + 1)) + min;
             }
         }
+
+
         private static readonly Dictionary<OrderStatus, List<OrderStatus>> AllowedStatusTransitions = new()
 {
 { OrderStatus.Pending, new List<OrderStatus> { OrderStatus.Processing, OrderStatus.Canceled } },

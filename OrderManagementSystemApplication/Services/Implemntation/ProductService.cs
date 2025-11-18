@@ -1,13 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using AutoMapper;
+﻿using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using OrderManagementSystemApplication.BaseResponse;
-using OrderManagementSystemApplication.Dtos;
 using OrderManagementSystemApplication.Dtos.Product;
 using OrderManagementSystemApplication.Helpers;
 using OrderManagementSystemApplication.Services.Abstract;
@@ -16,8 +10,8 @@ using OrderManagementSystemDomain.Repositories;
 
 namespace OrderManagementSystemApplication.Services.Implemntation
 {
-    public class ProductService(IProductRepository _productRepository,ICategoryRepository _categoryRepository,
-        ResponseHandler _responseHandler,IMapper _mapper, ILogger<ProductService> _logger) : IProductService
+    public class ProductService(IProductRepository _productRepository, ICategoryRepository _categoryRepository,
+        ResponseHandler _responseHandler, IMapper _mapper, ILogger<ProductService> _logger) : IProductService
     {
         public async Task<ApiResponse<String>> CreateProductAsync(ProductCreateDto productDto)
         {
@@ -38,7 +32,8 @@ namespace OrderManagementSystemApplication.Services.Implemntation
                 }
 
                 var product = _mapper.Map<Product>(productDto);
-                await _productRepository.AddAsync(product);
+                product.IsAvailable = product.StockQuantity > 0;
+                await _productRepository.UpdateAsync(product);
 
                 _logger.LogInformation(ProductLogMessages.ProductCreated, product.Id);
                 return _responseHandler.Created<string>("Created successfully.");
@@ -62,7 +57,7 @@ namespace OrderManagementSystemApplication.Services.Implemntation
                 }
 
                 product.IsAvailable = false;
-                await _productRepository.UpdateAsync(product);
+                await _productRepository.DeleteAsync(product);
 
                 _logger.LogInformation(ProductLogMessages.ProductDeleted, id);
                 return _responseHandler.Deleted<string>();
@@ -80,6 +75,7 @@ namespace OrderManagementSystemApplication.Services.Implemntation
             try
             {
                 var products = await _productRepository.GetTableNoTracking()
+                    .Include(p => p.Category)
                     .Where(p => p.CategoryId == categoryId && p.IsAvailable)
                     .ToListAsync();
 

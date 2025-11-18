@@ -12,8 +12,8 @@ using OrderManagementSystemInfrastructure.Data;
 namespace OrderManagementSystemInfrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20251027083337_initcreate1")]
-    partial class initcreate1
+    [Migration("20251118122452_upconfig11")]
+    partial class upconfig11
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -33,41 +33,41 @@ namespace OrderManagementSystemInfrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("AddressLine1")
+                    b.Property<string>("AddressLine")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<string>("AddressLine2")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                        .HasColumnType("nvarchar(100)")
+                        .HasComment("Address Line 1 cannot exceed 100 characters.");
 
                     b.Property<string>("City")
                         .IsRequired()
                         .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<string>("Country")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                        .HasColumnType("nvarchar(50)")
+                        .HasComment("City cannot exceed 50 characters.");
 
                     b.Property<int>("CustomerId")
-                        .HasColumnType("int");
+                        .HasColumnType("int")
+                        .HasComment("Customer ID is required.");
 
                     b.Property<string>("PostalCode")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)")
+                        .HasComment("Postal Code is required.");
 
                     b.Property<string>("State")
                         .IsRequired()
                         .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                        .HasColumnType("nvarchar(50)")
+                        .HasComment("State cannot exceed 50 characters.");
 
                     b.HasKey("Id");
 
                     b.HasIndex("CustomerId");
+
+                    b.HasIndex("PostalCode");
+
+                    b.HasIndex("City", "State");
 
                     b.ToTable("Addresses");
                 });
@@ -81,39 +81,61 @@ namespace OrderManagementSystemInfrastructure.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<decimal?>("CancellationCharges")
-                        .HasColumnType("decimal(18,2)");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("decimal(18,2)")
+                        .HasDefaultValue(0.00m)
+                        .HasComment("The cancellation charges applied (if any).");
 
                     b.Property<decimal>("OrderAmount")
-                        .HasColumnType("decimal(18,2)");
+                        .HasColumnType("decimal(18,2)")
+                        .HasComment("The order amount at the time of cancellation request initiation.");
 
                     b.Property<int>("OrderId")
-                        .HasColumnType("int");
+                        .HasColumnType("int")
+                        .HasComment("Order ID is required.");
 
                     b.Property<DateTime?>("ProcessedAt")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("datetime2")
+                        .HasComment("Date and time when the cancellation was processed.");
 
                     b.Property<int?>("ProcessedBy")
-                        .HasColumnType("int");
+                        .HasColumnType("int")
+                        .HasComment("ID of the admin or system that processed the cancellation.");
 
                     b.Property<string>("Reason")
                         .IsRequired()
                         .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
+                        .HasColumnType("nvarchar(500)")
+                        .HasComment("Cancellation reason cannot exceed 500 characters.");
 
                     b.Property<string>("Remarks")
                         .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
+                        .HasColumnType("nvarchar(500)")
+                        .HasComment("Remarks cannot exceed 500 characters.");
 
                     b.Property<DateTime>("RequestedAt")
-                        .HasColumnType("datetime2");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()")
+                        .HasComment("Date and time when the cancellation was requested.");
 
-                    b.Property<int>("Status")
-                        .HasColumnType("int");
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)")
+                        .HasComment("Status of the cancellation request.");
 
                     b.HasKey("Id");
 
                     b.HasIndex("OrderId")
                         .IsUnique();
+
+                    b.HasIndex("ProcessedAt");
+
+                    b.HasIndex("RequestedAt");
+
+                    b.HasIndex("Status");
+
+                    b.HasIndex("Status", "RequestedAt");
 
                     b.ToTable("Cancellations");
                 });
@@ -127,20 +149,38 @@ namespace OrderManagementSystemInfrastructure.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()")
+                        .HasComment("Timestamp when the cart was created.");
 
                     b.Property<int>("CustomerId")
-                        .HasColumnType("int");
+                        .HasColumnType("int")
+                        .HasComment("Customer ID is required.");
 
                     b.Property<bool>("IsCheckedOut")
-                        .HasColumnType("bit");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false)
+                        .HasComment("Indicates whether the cart has been checked out.");
 
                     b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("datetime2");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()")
+                        .HasComment("Timestamp when the cart was last updated.");
 
                     b.HasKey("Id");
 
+                    b.HasIndex("CreatedAt");
+
                     b.HasIndex("CustomerId");
+
+                    b.HasIndex("IsCheckedOut");
+
+                    b.HasIndex("UpdatedAt");
+
+                    b.HasIndex("CustomerId", "IsCheckedOut");
 
                     b.ToTable("Carts");
                 });
@@ -154,34 +194,52 @@ namespace OrderManagementSystemInfrastructure.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<int>("CartId")
-                        .HasColumnType("int");
+                        .HasColumnType("int")
+                        .HasComment("Cart ID is required.");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()")
+                        .HasComment("Timestamp when the cart item was created.");
 
                     b.Property<decimal>("Discount")
-                        .HasColumnType("decimal(18,2)");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("decimal(18,2)")
+                        .HasDefaultValue(0m)
+                        .HasComment("Discount must be between $0.00 and $1,000.00.");
 
                     b.Property<int>("ProductId")
-                        .HasColumnType("int");
+                        .HasColumnType("int")
+                        .HasComment("Product ID is required.");
 
                     b.Property<int>("Quantity")
-                        .HasColumnType("int");
+                        .HasColumnType("int")
+                        .HasComment("Quantity must be between 1 and 100.");
 
                     b.Property<decimal>("TotalPrice")
-                        .HasColumnType("decimal(18,2)");
+                        .HasColumnType("decimal(18,2)")
+                        .HasComment("Total Price is calculated based on quantity, unit price, and discount.");
 
                     b.Property<decimal>("UnitPrice")
-                        .HasColumnType("decimal(18,2)");
+                        .HasColumnType("decimal(18,2)")
+                        .HasComment("Unit Price must be between $0.01 and $10,000.00.");
 
                     b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("datetime2");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()")
+                        .HasComment("Timestamp when the cart item was last updated.");
 
                     b.HasKey("Id");
 
                     b.HasIndex("CartId");
 
+                    b.HasIndex("CreatedAt");
+
                     b.HasIndex("ProductId");
+
+                    b.HasIndex("CartId", "ProductId");
 
                     b.ToTable("CartItems");
                 });
@@ -197,20 +255,27 @@ namespace OrderManagementSystemInfrastructure.Migrations
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
+                        .HasColumnType("nvarchar(500)")
+                        .HasComment("Description cannot exceed 500 characters.");
 
                     b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                        .HasColumnType("nvarchar(100)")
+                        .HasComment("Category Name must be between 3 and 100 characters.");
 
                     b.HasKey("Id");
 
-                    b.HasIndex(new[] { "Name" }, "IX_Name_Unique")
-                        .IsUnique();
+                    b.HasIndex("IsActive");
+
+                    b.HasIndex("Name")
+                        .IsUnique()
+                        .HasDatabaseName("IX_Name_Unique");
 
                     b.ToTable("Categories");
                 });
@@ -224,75 +289,51 @@ namespace OrderManagementSystemInfrastructure.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime>("DateOfBirth")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("datetime2")
+                        .HasComment("DateOfBirth is required.");
 
                     b.Property<string>("Email")
                         .IsRequired()
-                        .HasColumnType("nvarchar(450)");
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)")
+                        .HasComment("Email is required.");
 
                     b.Property<string>("FirstName")
                         .IsRequired()
                         .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                        .HasColumnType("nvarchar(50)")
+                        .HasComment("First Name must be between 2 and 50 characters.");
 
                     b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
 
                     b.Property<string>("LastName")
                         .IsRequired()
                         .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<string>("Password")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(50)")
+                        .HasComment("Last Name must be between 2 and 50 characters.");
 
                     b.Property<string>("PhoneNumber")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)")
+                        .HasComment("PhoneNumber is required.");
 
                     b.HasKey("Id");
 
-                    b.HasIndex(new[] { "Email" }, "IX_Email_Unique")
-                        .IsUnique();
+                    b.HasIndex("Email")
+                        .IsUnique()
+                        .HasDatabaseName("IX_Email_Unique");
+
+                    b.HasIndex("IsActive");
+
+                    b.HasIndex("PhoneNumber");
+
+                    b.HasIndex("FirstName", "LastName");
 
                     b.ToTable("Customers");
-                });
-
-            modelBuilder.Entity("OrderManagementSystemDomain.Models.Feedback", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Comment")
-                        .HasMaxLength(1000)
-                        .HasColumnType("nvarchar(1000)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("CustomerId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("ProductId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Rating")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CustomerId");
-
-                    b.HasIndex("ProductId");
-
-                    b.ToTable("Feedbacks");
                 });
 
             modelBuilder.Entity("OrderManagementSystemDomain.Models.Order", b =>
@@ -304,42 +345,60 @@ namespace OrderManagementSystemInfrastructure.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<int>("BillingAddressId")
-                        .HasColumnType("int");
+                        .HasColumnType("int")
+                        .HasComment("Billing Address ID is required.");
 
                     b.Property<int>("CustomerId")
-                        .HasColumnType("int");
+                        .HasColumnType("int")
+                        .HasComment("Customer ID is required.");
 
                     b.Property<DateTime>("OrderDate")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("datetime2")
+                        .HasComment("Order Date is required.");
 
                     b.Property<string>("OrderNumber")
                         .IsRequired()
                         .HasMaxLength(30)
-                        .HasColumnType("nvarchar(30)");
+                        .HasColumnType("nvarchar(30)")
+                        .HasComment("Order Number cannot exceed 30 characters.");
 
-                    b.Property<int>("OrderStatus")
-                        .HasColumnType("int");
+                    b.Property<string>("OrderStatus")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)")
+                        .HasComment("Invalid Order Status.");
 
                     b.Property<int>("ShippingAddressId")
-                        .HasColumnType("int");
+                        .HasColumnType("int")
+                        .HasComment("Shipping Address ID is required.");
 
                     b.Property<decimal>("ShippingCost")
-                        .HasColumnType("decimal(18,2)");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("decimal(18,2)")
+                        .HasDefaultValue(0m)
+                        .HasComment("Shipping Cost must be between $0.00 and $10,000.00.");
 
                     b.Property<decimal>("TotalAmount")
-                        .HasColumnType("decimal(18,2)");
+                        .HasColumnType("decimal(18,2)")
+                        .HasComment("Total Amount must be between $0.00 and $110,000.00.");
 
                     b.Property<decimal>("TotalBaseAmount")
-                        .HasColumnType("decimal(18,2)");
+                        .HasColumnType("decimal(18,2)")
+                        .HasComment("Total Base Amount must be between $0.00 and $100,000.00.");
 
                     b.Property<decimal>("TotalDiscountAmount")
-                        .HasColumnType("decimal(18,2)");
+                        .HasColumnType("decimal(18,2)")
+                        .HasComment("Total Discount Amount must be between $0.00 and $100,000.00.");
 
                     b.HasKey("Id");
 
                     b.HasIndex("BillingAddressId");
 
                     b.HasIndex("CustomerId");
+
+                    b.HasIndex("OrderDate");
+
+                    b.HasIndex("OrderNumber")
+                        .IsUnique();
 
                     b.HasIndex("ShippingAddressId");
 
@@ -355,28 +414,38 @@ namespace OrderManagementSystemInfrastructure.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<decimal>("Discount")
-                        .HasColumnType("decimal(18,2)");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("decimal(18,2)")
+                        .HasDefaultValue(0m)
+                        .HasComment("Discount must be between $0.00 and $10,000.00.");
 
                     b.Property<int>("OrderId")
-                        .HasColumnType("int");
+                        .HasColumnType("int")
+                        .HasComment("Order ID is required.");
 
                     b.Property<int>("ProductId")
-                        .HasColumnType("int");
+                        .HasColumnType("int")
+                        .HasComment("Product ID is required.");
 
                     b.Property<int>("Quantity")
-                        .HasColumnType("int");
+                        .HasColumnType("int")
+                        .HasComment("Quantity must be between 1 and 100.");
 
                     b.Property<decimal>("TotalPrice")
-                        .HasColumnType("decimal(18,2)");
+                        .HasColumnType("decimal(18,2)")
+                        .HasComment("Total Price must be between $0.00 and $10,000.00.");
 
                     b.Property<decimal>("UnitPrice")
-                        .HasColumnType("decimal(18,2)");
+                        .HasColumnType("decimal(18,2)")
+                        .HasComment("Unit Price must be between $0.00 and $10,000.00.");
 
                     b.HasKey("Id");
 
                     b.HasIndex("OrderId");
 
                     b.HasIndex("ProductId");
+
+                    b.HasIndex("OrderId", "ProductId");
 
                     b.ToTable("OrderItems");
                 });
@@ -390,31 +459,52 @@ namespace OrderManagementSystemInfrastructure.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<decimal>("Amount")
-                        .HasColumnType("decimal(18,2)");
+                        .HasColumnType("decimal(18,2)")
+                        .HasComment("Payment amount.");
 
                     b.Property<int>("OrderId")
-                        .HasColumnType("int");
+                        .HasColumnType("int")
+                        .HasComment("Order ID is required.");
 
                     b.Property<DateTime>("PaymentDate")
-                        .HasColumnType("datetime2");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()")
+                        .HasComment("Date and time when the payment was made.");
 
                     b.Property<string>("PaymentMethod")
                         .IsRequired()
                         .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                        .HasColumnType("nvarchar(50)")
+                        .HasComment("Payment method (e.g., DebitCard, CreditCard, PayPal, COD).");
 
-                    b.Property<int>("Status")
+                    b.Property<string>("Status")
+                        .IsRequired()
                         .HasMaxLength(20)
-                        .HasColumnType("int");
+                        .HasColumnType("nvarchar(20)")
+                        .HasComment("Payment status (Completed, Pending, Failed, Refunded).");
 
                     b.Property<string>("TransactionId")
                         .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                        .HasColumnType("nvarchar(50)")
+                        .HasComment("Transaction ID from payment gateway.");
 
                     b.HasKey("Id");
 
                     b.HasIndex("OrderId")
                         .IsUnique();
+
+                    b.HasIndex("PaymentDate");
+
+                    b.HasIndex("PaymentMethod");
+
+                    b.HasIndex("Status");
+
+                    b.HasIndex("TransactionId");
+
+                    b.HasIndex("PaymentMethod", "Status");
+
+                    b.HasIndex("Status", "PaymentDate");
 
                     b.ToTable("Payments");
                 });
@@ -428,36 +518,59 @@ namespace OrderManagementSystemInfrastructure.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<int>("CategoryId")
-                        .HasColumnType("int");
+                        .HasColumnType("int")
+                        .HasComment("Category ID is required.");
 
                     b.Property<string>("Description")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(max)")
+                        .HasComment("Description must be at least 10 characters.");
 
                     b.Property<int>("DiscountPercentage")
-                        .HasColumnType("int");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0)
+                        .HasComment("Discount Percentage must be between 0% and 100%.");
 
                     b.Property<string>("ImageUrl")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<bool>("IsAvailable")
-                        .HasColumnType("bit");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                        .HasColumnType("nvarchar(100)")
+                        .HasComment("Product Name must be between 3 and 100 characters.");
 
                     b.Property<decimal>("Price")
-                        .HasColumnType("decimal(18,2)");
+                        .HasColumnType("decimal(18,2)")
+                        .HasComment("Price must be between $0.01 and $10,000.00.");
 
                     b.Property<int>("StockQuantity")
-                        .HasColumnType("int");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0)
+                        .HasComment("Stock Quantity must be between 0 and 1000.");
 
                     b.HasKey("Id");
 
                     b.HasIndex("CategoryId");
+
+                    b.HasIndex("IsAvailable");
+
+                    b.HasIndex("Name");
+
+                    b.HasIndex("Price");
+
+                    b.HasIndex("CategoryId", "IsAvailable");
+
+                    b.HasIndex("IsAvailable", "Price");
 
                     b.ToTable("Products");
                 });
@@ -471,45 +584,71 @@ namespace OrderManagementSystemInfrastructure.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<decimal>("Amount")
-                        .HasColumnType("decimal(18,2)");
+                        .HasColumnType("decimal(18,2)")
+                        .HasComment("Refund amount must be between $0.01 and $100,000.00.");
 
                     b.Property<int>("CancellationId")
-                        .HasColumnType("int");
+                        .HasColumnType("int")
+                        .HasComment("Cancellation ID is required.");
 
                     b.Property<DateTime?>("CompletedAt")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("datetime2")
+                        .HasComment("Date and time when the refund was completed.");
 
                     b.Property<DateTime>("InitiatedAt")
-                        .HasColumnType("datetime2");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()")
+                        .HasComment("Date and time when the refund was initiated.");
 
                     b.Property<int>("PaymentId")
-                        .HasColumnType("int");
+                        .HasColumnType("int")
+                        .HasComment("Payment ID is required.");
 
                     b.Property<int?>("ProcessedBy")
-                        .HasColumnType("int");
+                        .HasColumnType("int")
+                        .HasComment("Track who processed (approved) the refund.");
 
                     b.Property<string>("RefundMethod")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)")
+                        .HasComment("Method used for refund (e.g., Original Payment Method, Bank Transfer).");
 
                     b.Property<string>("RefundReason")
                         .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
+                        .HasColumnType("nvarchar(500)")
+                        .HasComment("Refund Reason cannot exceed 500 characters.");
 
-                    b.Property<int>("Status")
-                        .HasColumnType("int");
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)")
+                        .HasComment("Status of the refund.");
 
                     b.Property<string>("TransactionId")
                         .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                        .HasColumnType("nvarchar(100)")
+                        .HasComment("Transaction ID cannot exceed 100 characters.");
 
                     b.HasKey("Id");
 
                     b.HasIndex("CancellationId")
                         .IsUnique();
 
+                    b.HasIndex("CompletedAt");
+
+                    b.HasIndex("InitiatedAt");
+
                     b.HasIndex("PaymentId")
                         .IsUnique();
+
+                    b.HasIndex("Status");
+
+                    b.HasIndex("TransactionId");
+
+                    b.HasIndex("Status", "InitiatedAt");
+
+                    b.HasIndex("Status", "ProcessedBy");
 
                     b.ToTable("Refunds");
                 });
@@ -525,9 +664,14 @@ namespace OrderManagementSystemInfrastructure.Migrations
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                        .HasColumnType("nvarchar(50)")
+                        .HasComment("Status name is required.");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("Name")
+                        .IsUnique()
+                        .HasDatabaseName("IX_Status_Name_Unique");
 
                     b.ToTable("Statuses");
                 });
@@ -584,25 +728,6 @@ namespace OrderManagementSystemInfrastructure.Migrations
                     b.Navigation("Product");
                 });
 
-            modelBuilder.Entity("OrderManagementSystemDomain.Models.Feedback", b =>
-                {
-                    b.HasOne("OrderManagementSystemDomain.Models.Customer", "Customer")
-                        .WithMany("Feedbacks")
-                        .HasForeignKey("CustomerId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("OrderManagementSystemDomain.Models.Product", "Product")
-                        .WithMany("Feedbacks")
-                        .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Customer");
-
-                    b.Navigation("Product");
-                });
-
             modelBuilder.Entity("OrderManagementSystemDomain.Models.Order", b =>
                 {
                     b.HasOne("OrderManagementSystemDomain.Models.Address", "BillingAddress")
@@ -614,7 +739,7 @@ namespace OrderManagementSystemInfrastructure.Migrations
                     b.HasOne("OrderManagementSystemDomain.Models.Customer", "Customer")
                         .WithMany("Orders")
                         .HasForeignKey("CustomerId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("OrderManagementSystemDomain.Models.Address", "ShippingAddress")
@@ -641,7 +766,7 @@ namespace OrderManagementSystemInfrastructure.Migrations
                     b.HasOne("OrderManagementSystemDomain.Models.Product", "Product")
                         .WithMany("OrderItems")
                         .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Order");
@@ -654,7 +779,7 @@ namespace OrderManagementSystemInfrastructure.Migrations
                     b.HasOne("OrderManagementSystemDomain.Models.Order", "Order")
                         .WithOne("Payment")
                         .HasForeignKey("OrderManagementSystemDomain.Models.Payment", "OrderId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Order");
@@ -665,7 +790,7 @@ namespace OrderManagementSystemInfrastructure.Migrations
                     b.HasOne("OrderManagementSystemDomain.Models.Category", "Category")
                         .WithMany("Products")
                         .HasForeignKey("CategoryId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Category");
@@ -682,7 +807,7 @@ namespace OrderManagementSystemInfrastructure.Migrations
                     b.HasOne("OrderManagementSystemDomain.Models.Payment", "Payment")
                         .WithOne("Refund")
                         .HasForeignKey("OrderManagementSystemDomain.Models.Refund", "PaymentId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Cancellation");
@@ -712,8 +837,6 @@ namespace OrderManagementSystemInfrastructure.Migrations
 
                     b.Navigation("Carts");
 
-                    b.Navigation("Feedbacks");
-
                     b.Navigation("Orders");
                 });
 
@@ -736,8 +859,6 @@ namespace OrderManagementSystemInfrastructure.Migrations
 
             modelBuilder.Entity("OrderManagementSystemDomain.Models.Product", b =>
                 {
-                    b.Navigation("Feedbacks");
-
                     b.Navigation("OrderItems");
                 });
 #pragma warning restore 612, 618

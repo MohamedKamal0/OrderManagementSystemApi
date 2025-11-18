@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using OrderManagementSystemInfrastructure.Data;
 
@@ -11,9 +12,11 @@ using OrderManagementSystemInfrastructure.Data;
 namespace OrderManagementSystemInfrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251118001556_addconfigur")]
+    partial class addconfigur
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -349,6 +352,9 @@ namespace OrderManagementSystemInfrastructure.Migrations
                         .HasColumnType("int")
                         .HasComment("Customer ID is required.");
 
+                    b.Property<int?>("CustomerId1")
+                        .HasColumnType("int");
+
                     b.Property<DateTime>("OrderDate")
                         .HasColumnType("datetime2")
                         .HasComment("Order Date is required.");
@@ -392,6 +398,8 @@ namespace OrderManagementSystemInfrastructure.Migrations
 
                     b.HasIndex("CustomerId");
 
+                    b.HasIndex("CustomerId1");
+
                     b.HasIndex("OrderDate");
 
                     b.HasIndex("OrderNumber")
@@ -420,6 +428,9 @@ namespace OrderManagementSystemInfrastructure.Migrations
                         .HasColumnType("int")
                         .HasComment("Order ID is required.");
 
+                    b.Property<int>("OrderId1")
+                        .HasColumnType("int");
+
                     b.Property<int>("ProductId")
                         .HasColumnType("int")
                         .HasComment("Product ID is required.");
@@ -439,6 +450,8 @@ namespace OrderManagementSystemInfrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("OrderId");
+
+                    b.HasIndex("OrderId1");
 
                     b.HasIndex("ProductId");
 
@@ -462,6 +475,9 @@ namespace OrderManagementSystemInfrastructure.Migrations
                     b.Property<int>("OrderId")
                         .HasColumnType("int")
                         .HasComment("Order ID is required.");
+
+                    b.Property<int>("OrderId1")
+                        .HasColumnType("int");
 
                     b.Property<DateTime>("PaymentDate")
                         .ValueGeneratedOnAdd()
@@ -490,6 +506,8 @@ namespace OrderManagementSystemInfrastructure.Migrations
 
                     b.HasIndex("OrderId")
                         .IsUnique();
+
+                    b.HasIndex("OrderId1");
 
                     b.HasIndex("PaymentDate");
 
@@ -535,9 +553,7 @@ namespace OrderManagementSystemInfrastructure.Migrations
                         .HasColumnType("nvarchar(500)");
 
                     b.Property<bool>("IsAvailable")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(true);
+                        .HasColumnType("bit");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -734,10 +750,14 @@ namespace OrderManagementSystemInfrastructure.Migrations
                         .IsRequired();
 
                     b.HasOne("OrderManagementSystemDomain.Models.Customer", "Customer")
-                        .WithMany("Orders")
+                        .WithMany()
                         .HasForeignKey("CustomerId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.HasOne("OrderManagementSystemDomain.Models.Customer", null)
+                        .WithMany("Orders")
+                        .HasForeignKey("CustomerId1");
 
                     b.HasOne("OrderManagementSystemDomain.Models.Address", "ShippingAddress")
                         .WithMany()
@@ -754,9 +774,15 @@ namespace OrderManagementSystemInfrastructure.Migrations
 
             modelBuilder.Entity("OrderManagementSystemDomain.Models.OrderItem", b =>
                 {
-                    b.HasOne("OrderManagementSystemDomain.Models.Order", "Order")
+                    b.HasOne("OrderManagementSystemDomain.Models.Order", null)
                         .WithMany("OrderItems")
                         .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("OrderManagementSystemDomain.Models.Order", "Order")
+                        .WithMany()
+                        .HasForeignKey("OrderId1")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -773,10 +799,16 @@ namespace OrderManagementSystemInfrastructure.Migrations
 
             modelBuilder.Entity("OrderManagementSystemDomain.Models.Payment", b =>
                 {
-                    b.HasOne("OrderManagementSystemDomain.Models.Order", "Order")
+                    b.HasOne("OrderManagementSystemDomain.Models.Order", null)
                         .WithOne("Payment")
                         .HasForeignKey("OrderManagementSystemDomain.Models.Payment", "OrderId")
                         .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("OrderManagementSystemDomain.Models.Order", "Order")
+                        .WithMany()
+                        .HasForeignKey("OrderId1")
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Order");
