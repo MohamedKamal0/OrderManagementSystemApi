@@ -25,12 +25,7 @@ namespace OrderManagementSystemInfrastructure.Configurations
                 .IsRequired()
                 .HasComment("Product ID is required.");
 
-            //builder.HasOne(ci => ci.Product)
-            // .WithMany()
-            // .HasForeignKey(ci => ci.ProductId)
-            //.OnDelete(DeleteBehavior.Restrict)
-            // .IsRequired();
-
+            
             builder.Property(ci => ci.Quantity)
                 .IsRequired()
                 .HasComment("Quantity must be between 1 and 100.");

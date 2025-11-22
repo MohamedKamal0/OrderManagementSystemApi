@@ -25,7 +25,7 @@ namespace OrderManagementSystemInfrastructure.Configurations
                 .HasComment("Customer ID is required.");
 
             builder.HasOne(o => o.Customer)
-                 .WithMany(c => c.Orders)  // ✅ Added navigation property
+                 .WithMany(c => c.Orders)  
                  .HasForeignKey(o => o.CustomerId)
                  .OnDelete(DeleteBehavior.Restrict)
                  .IsRequired();
@@ -75,24 +75,13 @@ namespace OrderManagementSystemInfrastructure.Configurations
                 .HasConversion<string>()
                 .HasComment("Invalid Order Status.");
 
-            // OrderItems Relationship
-            // builder.HasMany(o => o.OrderItems)
-            //.WithOne()
-            //.HasForeignKey("OrderId")
-            //.OnDelete(DeleteBehavior.Restrict)// Prevent cascade delete to avoid multiple paths
-            //.IsRequired();
-
+            
             // Payment Relationship (One-to-One)
             builder.HasOne(o => o.Payment)
-                     .WithOne(p => p.Order)  // ✅ Added navigation property
-                     .HasForeignKey<Payment>(p => p.OrderId)  // ✅ Using expression
+                     .WithOne(p => p.Order)  
+                     .HasForeignKey<Payment>(p => p.OrderId)  
                      .OnDelete(DeleteBehavior.Restrict);
-            // Cancellation Relationship (One-to-One)
-            //   builder.HasOne(o => o.Cancellation)
-            // .WithOne()
-            // .HasForeignKey<Cancellation>("OrderId")
-            // .OnDelete(DeleteBehavior.Restrict);
-
+            
             // Index for Order Number (for faster lookups)
             builder.HasIndex(o => o.OrderNumber)
                 .IsUnique();

@@ -16,6 +16,5 @@ namespace OrderManagementSystemDomain.Models
         [ForeignKey("CategoryId")]
         public Category Category { get; set; }
         public ICollection<OrderItem> OrderItems { get; set; }
-        // public ICollection<Feedback> Feedbacks { get; set; }
     }
 }

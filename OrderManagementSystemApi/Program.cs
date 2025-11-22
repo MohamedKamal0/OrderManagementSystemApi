@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Hybrid;
 using OrderManagementSystemApplication.BaseResponse;
 using OrderManagementSystemApplication.Maping;
 using OrderManagementSystemApplication.Services.Abstract;
@@ -16,10 +17,27 @@ builder.Services.AddAutoMapper(typeof(CartMappingProfile));
 
 builder.Services.AddControllers();
 
-//Log.Logger = new LoggerConfiguration()
-//.ReadFrom.Configuration(builder.Configuration)
-//.Enrich.FromLogContext()
-//  .CreateLogger();
+builder.Services.AddStackExchangeRedisCache(options =>
+{
+    options.Configuration = builder.Configuration.GetConnectionString("Redis");
+    options.InstanceName = "OrderManagementSystem";
+});
+
+builder.Services.AddDistributedSqlServerCache(options =>
+{
+    options.ConnectionString = builder.Configuration.GetConnectionString("DefaultConnstring");
+    options.SchemaName = "dbo";
+    options.TableName = "CacheEntries";
+});
+
+builder.Services.AddHybridCache(options =>
+{
+    options.DefaultEntryOptions = new HybridCacheEntryOptions
+    {
+        Expiration = TimeSpan.FromMinutes(10), // L2, L3 
+        LocalCacheExpiration = TimeSpan.FromSeconds(30) // L1
+    };
+});
 
 //builder.Host.UseSerilog();
 

@@ -19,4 +19,8 @@
 		<ProjectReference Include="..\OrderManagementSystemDomain\OrderManagementSystemDomain.csproj" />
 	</ItemGroup>
 
+	<ItemGroup>
+	  <Folder Include="Dtos\Payment\" />
+	</ItemGroup>
+
 </Project>

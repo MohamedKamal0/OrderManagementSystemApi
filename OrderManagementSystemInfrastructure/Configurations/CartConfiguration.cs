@@ -36,12 +36,7 @@ namespace OrderManagementSystemInfrastructure.Configurations
                 .HasDefaultValueSql("GETUTCDATE()")
                 .HasComment("Timestamp when the cart was last updated.");
 
-            // CartItems Relationship (One-to-Many)
-            //builder.HasMany(c => c.CartItems)
-            //.WithOne(ci => ci.Cart)
-            //  .HasForeignKey(ci => ci.CartId)
-            // .OnDelete(DeleteBehavior.Cascade);
-
+            
             // Indexes for performance
             builder.HasIndex(c => c.CustomerId);
 

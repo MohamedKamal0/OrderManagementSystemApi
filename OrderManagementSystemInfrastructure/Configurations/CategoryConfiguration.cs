@@ -24,12 +24,7 @@ namespace OrderManagementSystemInfrastructure.Configurations
                 .IsRequired()
                 .HasDefaultValue(true);
 
-            // Products Relationship (One-to-Many)
-            //   builder.HasMany(c => c.Products)
-            //.WithOne(p => p.Category)
-            // .HasForeignKey(p => p.CategoryId)
-            // .OnDelete(DeleteBehavior.Restrict);
-
+            
             // Unique Index on Name
             builder.HasIndex(c => c.Name)
                 .IsUnique()

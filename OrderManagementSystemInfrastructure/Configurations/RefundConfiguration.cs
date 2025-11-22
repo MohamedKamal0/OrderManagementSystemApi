@@ -15,11 +15,6 @@ namespace OrderManagementSystemInfrastructure.Configurations
                 .IsRequired()
                 .HasComment("Cancellation ID is required.");
 
-            //   builder.HasOne(r => r.Cancellation)
-            //.WithOne(c => c.Refund)
-            //.HasForeignKey<Refund>(r => r.CancellationId)
-            //.OnDelete(DeleteBehavior.Cascade)
-            // .IsRequired();
 
             builder.Property(r => r.PaymentId)
                 .IsRequired()

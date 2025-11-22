@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace OrderManagementSystemApplication.Helpers
+﻿namespace OrderManagementSystemApplication.Helpers
 {
     public static class CategoryLogMessages
     {
@@ -17,7 +11,7 @@ namespace OrderManagementSystemApplication.Helpers
         public const string CategoriesRetrieved = "Retrieved {Count} categories.";
         public const string CategoryRetrieved = "Category retrieved successfully. ID: {CategoryId}";
         public const string ErrorRetrievingCategories = "Error retrieving categories.";
+        public const string cachBb = "DB Visited - Categories fetched from database";
 
-     
     }
 }

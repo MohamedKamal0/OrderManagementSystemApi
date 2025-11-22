@@ -1,13 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using AutoMapper;
+﻿using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using OrderManagementSystemApplication.BaseResponse;
-using OrderManagementSystemApplication.Dtos;
 using OrderManagementSystemApplication.Dtos.Address;
 using OrderManagementSystemApplication.Helpers;
 using OrderManagementSystemApplication.Services.Abstract;
@@ -22,7 +16,7 @@ namespace OrderManagementSystemApplication.Services.Implemntation
     {
         public async Task<ApiResponse<string>> CreateAddressAsync(AddressCreateDto addressDto)
         {
-            
+
             try
             {
                 var customer = await _customerRepository.GetByIdAsync(addressDto.CustomerId);
@@ -47,7 +41,7 @@ namespace OrderManagementSystemApplication.Services.Implemntation
 
         public async Task<ApiResponse<string>> DeleteAddressAsync(AddressDeleteDto addressDeleteDto)
         {
-            
+
             try
             {
                 var address = await _repository.GetTableAsTracking()
@@ -103,7 +97,7 @@ namespace OrderManagementSystemApplication.Services.Implemntation
 
         public async Task<ApiResponse<List<AddressResponseDto>>> GetAddressesByCustomerAsync(int customerId)
         {
-            
+
             try
             {
                 var customer = await _customerRepository.GetTableNoTracking()
@@ -140,7 +134,7 @@ namespace OrderManagementSystemApplication.Services.Implemntation
                 {
                     _logger.LogWarning(AddressLogMessages.AddressNotFound,
                         addressDto.AddressId, addressDto.CustomerId);
-                    
+
                     return _responseHandler.NotFound<string>(
                         $"Address with ID {addressDto.AddressId} not found for customer {addressDto.CustomerId}.");
                 }

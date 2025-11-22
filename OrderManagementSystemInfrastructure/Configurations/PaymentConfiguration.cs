@@ -15,12 +15,7 @@ namespace OrderManagementSystemInfrastructure.Configurations
                 .IsRequired()
                 .HasComment("Order ID is required.");
 
-            //    builder.HasOne(p => p.Order)
-            //.WithOne(o => o.Payment)
-            //.HasForeignKey<Payment>(p => p.OrderId)
-            //.OnDelete(DeleteBehavior.Restrict)
-            //.IsRequired();
-
+            
             builder.Property(p => p.PaymentMethod)
                 .IsRequired()
                 .HasMaxLength(50)
@@ -47,12 +42,7 @@ namespace OrderManagementSystemInfrastructure.Configurations
                 .HasMaxLength(20)
                 .HasComment("Payment status (Completed, Pending, Failed, Refunded).");
 
-            // Refund Relationship (One-to-One)
-            //  builder.HasOne(p => p.Refund)
-            //.WithOne(r => r.Payment)
-            //.HasForeignKey<Refund>(r => r.PaymentId)
-            // .OnDelete(DeleteBehavior.Cascade);
-
+            
             // Indexes for performance
             builder.HasIndex(p => p.OrderId)
                 .IsUnique();

@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
 using OrderManagementSystemApplication.BaseResponse;
 using OrderManagementSystemApplication.Dtos.Product;
@@ -11,7 +12,7 @@ using OrderManagementSystemDomain.Repositories;
 namespace OrderManagementSystemApplication.Services.Implemntation
 {
     public class ProductService(IProductRepository _productRepository, ICategoryRepository _categoryRepository,
-        ResponseHandler _responseHandler, IMapper _mapper, ILogger<ProductService> _logger) : IProductService
+        ResponseHandler _responseHandler, IMapper _mapper, ILogger<ProductService> _logger, HybridCache _cache) : IProductService
     {
         public async Task<ApiResponse<String>> CreateProductAsync(ProductCreateDto productDto)
         {
@@ -34,7 +35,7 @@ namespace OrderManagementSystemApplication.Services.Implemntation
                 var product = _mapper.Map<Product>(productDto);
                 product.IsAvailable = product.StockQuantity > 0;
                 await _productRepository.UpdateAsync(product);
-
+                await _cache.RemoveAsync("products_by_category");
                 _logger.LogInformation(ProductLogMessages.ProductCreated, product.Id);
                 return _responseHandler.Created<string>("Created successfully.");
             }
@@ -58,7 +59,7 @@ namespace OrderManagementSystemApplication.Services.Implemntation
 
                 product.IsAvailable = false;
                 await _productRepository.DeleteAsync(product);
-
+                await _cache.RemoveAsync("products_by_category");
                 _logger.LogInformation(ProductLogMessages.ProductDeleted, id);
                 return _responseHandler.Deleted<string>();
             }
@@ -74,21 +75,30 @@ namespace OrderManagementSystemApplication.Services.Implemntation
         {
             try
             {
-                var products = await _productRepository.GetTableNoTracking()
-                    .Include(p => p.Category)
-                    .Where(p => p.CategoryId == categoryId && p.IsAvailable)
-                    .ToListAsync();
+                var results = await _cache.GetOrCreateAsync<List<ProductResponseDto>>
+                     ("products_by_category",
+                    async ct =>
+                    {
+                        var products = await _productRepository.GetTableNoTracking()
+                            .Include(p => p.Category)
+                            .Where(p => p.CategoryId == categoryId && p.IsAvailable)
+                            .ToListAsync(ct);
+                        if (products.Count == 0)
+                            return null;
+                        var resmap = _mapper.Map<List<ProductResponseDto>>(products);
+                        _logger.LogInformation(ProductLogMessages.cachBb);
 
-                if (!products.Any())
+                        return resmap;
+                    });
+                if (results == null)
                 {
                     _logger.LogWarning(ProductLogMessages.CategoryNotFound, categoryId);
                     return _responseHandler.NotFound<List<ProductResponseDto>>("No products found for this category.");
+
                 }
 
-                var result = _mapper.Map<List<ProductResponseDto>>(products);
-
-                _logger.LogInformation(ProductLogMessages.ProductsByCategoryRetrieved, result.Count, categoryId);
-                return _responseHandler.Success(result);
+                _logger.LogInformation(ProductLogMessages.ProductsByCategoryRetrieved, results.Count, categoryId);
+                return _responseHandler.Success(results);
             }
             catch (Exception ex)
             {
@@ -153,7 +163,7 @@ namespace OrderManagementSystemApplication.Services.Implemntation
 
                 product.IsAvailable = dto.IsAvailable;
                 await _productRepository.UpdateAsync(product);
-
+                await _cache.RemoveAsync("products_by_category");
                 _logger.LogInformation(ProductLogMessages.ProductStatusUpdated, dto.ProductId);
                 return _responseHandler.Updated<string>("Updated successfully.");
             }

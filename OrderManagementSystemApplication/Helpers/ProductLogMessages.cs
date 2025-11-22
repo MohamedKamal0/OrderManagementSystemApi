@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace OrderManagementSystemApplication.Helpers
+﻿namespace OrderManagementSystemApplication.Helpers
 {
     public static class ProductLogMessages
     {
@@ -22,6 +16,8 @@ namespace OrderManagementSystemApplication.Helpers
         public const string ErrorUpdatingProduct = "Error updating product with Id {ProductId}.";
         public const string ErrorDeletingProduct = "Error deleting product with Id {ProductId}.";
         public const string ErrorRetrievingProducts = "Error retrieving products.";
+        public const string cachBb = "DB Visited - product fetched from database";
+
     }
 }
 

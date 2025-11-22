@@ -58,12 +58,7 @@ namespace OrderManagementSystemInfrastructure.Configurations
                 .HasForeignKey(oi => oi.ProductId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            // Feedbacks Relationship (One-to-Many)
-            //  builder.HasMany(p => p.Feedbacks)
-            //.WithOne(f => f.Product)
-            //.HasForeignKey(f => f.ProductId)
-            // .OnDelete(DeleteBehavior.Cascade);
-
+            
             // Indexes for performance
             builder.HasIndex(p => p.Name);
 

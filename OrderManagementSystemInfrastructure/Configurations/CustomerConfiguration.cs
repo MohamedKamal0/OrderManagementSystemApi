@@ -39,30 +39,6 @@ namespace OrderManagementSystemInfrastructure.Configurations
                 .IsRequired()
                 .HasDefaultValue(true);
 
-            // Addresses Relationship (One-to-Many)
-            //  builder.HasMany(c => c.Addresses)
-            //    .WithOne(a => a.Customer)
-            //  .HasForeignKey(a => a.CustomerId)
-            //.OnDelete(DeleteBehavior.Cascade);
-
-            // Orders Relationship (One-to-Many)
-            //  builder.HasMany(c => c.Orders)
-            //    .WithOne(o => o.Customer)
-            //  .HasForeignKey(o => o.CustomerId)
-            //.OnDelete(DeleteBehavior.Restrict);
-
-            // Carts Relationship (One-to-Many)
-            //  builder.HasMany(c => c.Carts)
-            // .WithOne(cart => cart.Customer)
-            // .HasForeignKey(cart => cart.CustomerId)
-            // .OnDelete(DeleteBehavior.Cascade);
-
-            // Feedbacks Relationship (One-to-Many)
-            //   builder.HasMany(c => c.Feedbacks)
-            //.WithOne(f => f.Customer)
-            //.HasForeignKey(f => f.CustomerId)
-            //.OnDelete(DeleteBehavior.Cascade);
-
             // Unique Index on Email
             builder.HasIndex(c => c.Email)
                 .IsUnique()

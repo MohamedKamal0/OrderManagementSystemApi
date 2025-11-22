@@ -12,6 +12,5 @@
         public ICollection<Address> Addresses { get; set; }
         public ICollection<Order> Orders { get; set; }
         public ICollection<Cart> Carts { get; set; }
-        //  public ICollection<Feedback> Feedbacks { get; set; }
     }
 }

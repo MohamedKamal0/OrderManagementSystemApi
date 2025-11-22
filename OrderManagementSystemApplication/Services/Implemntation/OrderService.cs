@@ -1,6 +1,7 @@
 ﻿using System.Security.Cryptography;
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
 using OrderManagementSystemApplication.BaseResponse;
 using OrderManagementSystemApplication.Dtos.Order;
@@ -15,7 +16,7 @@ namespace OrderManagementSystemApplication.Services.Implemntation
     public class OrderService(IOrderRepository _orderRepository,
         ICustomerRepository _customerRepository, IAddressRepository _addressRepository,
         IProductRepository _productRepository, IShoppingRepository _shoppingRepository,
-        IMapper _mapper, ResponseHandler _responseHandler, ILogger<OrderService> _logger) : IOrderService
+        IMapper _mapper, ResponseHandler _responseHandler, ILogger<OrderService> _logger, HybridCache _cache) : IOrderService
     {
 
         public async Task<ApiResponse<string>> CreateOrderAsync(OrderCreateDto orderDto)
@@ -134,6 +135,7 @@ namespace OrderManagementSystemApplication.Services.Implemntation
         {
             try
             {
+
                 var customer = await _customerRepository.GetCustomerWithOrdersAsync(customerId);
                 if (customer == null)
                 {

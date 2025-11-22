@@ -1,13 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using AutoMapper;
+﻿using AutoMapper;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
 using OrderManagementSystemApplication.BaseResponse;
-using OrderManagementSystemApplication.Dtos;
 using OrderManagementSystemApplication.Dtos.Category;
 using OrderManagementSystemApplication.Helpers;
 using OrderManagementSystemApplication.Services.Abstract;
@@ -17,7 +12,7 @@ using OrderManagementSystemDomain.Repositories;
 namespace OrderManagementSystemApplication.Services.Implemntation
 {
     public class CategoryService(ICategoryRepository _categoryRepository,
-        ResponseHandler _responseHandler,IMapper _mapper, ILogger<CategoryService> _logger) : ICategoryService
+        ResponseHandler _responseHandler, IMapper _mapper, ILogger<CategoryService> _logger, HybridCache _cache) : ICategoryService
     {
         public async Task<ApiResponse<string>> CreateCategoryAsync(CategoryCreateDto categoryDto)
         {
@@ -31,11 +26,11 @@ namespace OrderManagementSystemApplication.Services.Implemntation
                 var category = _mapper.Map<Category>(categoryDto);
                 category.IsActive = true;
                 await _categoryRepository.AddAsync(category);
-
+                await _cache.RemoveAsync("all_categories_cache_key");
                 _logger.LogInformation(CategoryLogMessages.CategoryCreated, categoryDto.Name);
                 return _responseHandler.Created("Created Successfully.");
             }
-            catch (Exception ex) 
+            catch (Exception ex)
             {
                 _logger.LogError(ex, CategoryLogMessages.ErrorCreatingCategory, categoryDto.Name);
                 return _responseHandler.InternalServerError<string>("An error occurred while creating the category.");
@@ -51,12 +46,21 @@ namespace OrderManagementSystemApplication.Services.Implemntation
         {
             try
             {
-                var categories = await _categoryRepository
-                    .GetTableNoTracking()
-                    .ToListAsync();
-                var categoryList = _mapper.Map<List<CategoryResponseDto>>(categories);
+
+
+                var categories = await _cache.GetOrCreateAsync("all_categories_cache_key",
+                    async ct =>
+                      {
+                          var result = await _categoryRepository
+                          .GetTableNoTracking()
+                          .ToListAsync(ct);
+                          var categoryList = _mapper.Map<List<CategoryResponseDto>>(result);
+                          _logger.LogInformation(CategoryLogMessages.cachBb);
+
+                          return categoryList;
+                      });
                 _logger.LogInformation(CategoryLogMessages.CategoriesRetrieved, categories.Count);
-                return _responseHandler.Success(categoryList);
+                return _responseHandler.Success(categories);
             }
             catch (Exception ex)
             {
