@@ -1,12 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace OrderManagementSystemApplication.Dtos.Payment
 {
-    internal class CODPaymentUpdateDto
+    public class CODPaymentUpdateDto
     {
+        [Required(ErrorMessage = "Order ID is required.")]
+        public int OrderId { get; set; }
+        [Required(ErrorMessage = "Payment Id is required.")]
+        public int PaymentId { get; set; }
     }
 }

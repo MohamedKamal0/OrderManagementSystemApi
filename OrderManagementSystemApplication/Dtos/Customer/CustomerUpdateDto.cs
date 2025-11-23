@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace OrderManagementSystemApplication.Dtos.Customer
 {
@@ -23,7 +18,7 @@ namespace OrderManagementSystemApplication.Dtos.Customer
         [EmailAddress(ErrorMessage = "Invalid Email Address.")]
         public string Email { get; set; }
         [Required(ErrorMessage = "PhoneNumber is required.")]
-        [Phone(ErrorMessage = "Invalid Phone Number.")]
+        [RegularExpression(@"^\d{11}$", ErrorMessage = "Phone number must be exactly 11 digits.")]
         public string PhoneNumber { get; set; }
         [Required(ErrorMessage = "DateOfBirth is required.")]
         public DateTime DateOfBirth { get; set; }

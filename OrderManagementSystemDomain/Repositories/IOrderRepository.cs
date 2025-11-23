@@ -1,15 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using OrderManagementSystemDomain.Models;
+﻿using OrderManagementSystemDomain.Models;
 
 namespace OrderManagementSystemDomain.Repositories
 {
-    public interface IOrderRepository:IGenericRepository<Order>
+    public interface IOrderRepository : IGenericRepository<Order>
     {
         Task<Order?> GetOrderWithDetailsAsync(int orderId);
+        Task<Order?> GetOrderWithPaymentAsync(int orderId, int customerId);
 
     }
 }
