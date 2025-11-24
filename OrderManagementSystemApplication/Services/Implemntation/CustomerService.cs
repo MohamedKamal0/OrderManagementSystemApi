@@ -3,23 +3,21 @@ using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using OrderManagementSystemApplication.BaseResponse;
-using OrderManagementSystemApplication.Dtos;
 using OrderManagementSystemApplication.Dtos.Customer;
 using OrderManagementSystemApplication.Helpers;
 using OrderManagementSystemApplication.Services.Abstract;
 using OrderManagementSystemDomain.Models;
 using OrderManagementSystemDomain.Repositories;
-using Org.BouncyCastle.Crypto.Generators;
 namespace OrderManagementSystemApplication.Services.Implemntation
 {
-    public class CustomerService(ICustomerRepository _repository, 
-        ResponseHandler _responseHandler,IMapper _mapper, ILogger<CustomerService> _logger) : ICustomerService
+    public class CustomerService(IUnitOfWork _unitOfWork,
+        ResponseHandler _responseHandler, IMapper _mapper, ILogger<CustomerService> _logger) : ICustomerService
     {
         public async Task<ApiResponse<string>> DeleteCustomerAsync(int id)
         {
             try
             {
-                var customer = await _repository.GetTableNoTracking()
+                var customer = await _unitOfWork.Customers.GetTableNoTracking()
                     .FirstOrDefaultAsync(c => c.Id == id);
 
                 if (customer == null)
@@ -30,7 +28,7 @@ namespace OrderManagementSystemApplication.Services.Implemntation
 
                 // Soft Delete
                 customer.IsActive = false;
-                await _repository.DeleteAsync(customer);
+                await _unitOfWork.Customers.DeleteAsync(customer);
 
                 _logger.LogInformation(CustomerLogMessages.CustomerDeleted, id);
                 return _responseHandler.Deleted<string>();
@@ -46,7 +44,7 @@ namespace OrderManagementSystemApplication.Services.Implemntation
         {
             try
             {
-                var customer = await _repository.GetTableNoTracking()
+                var customer = await _unitOfWork.Customers.GetTableNoTracking()
                     .FirstOrDefaultAsync(c => c.Id == id && c.IsActive);
 
                 if (customer == null)
@@ -71,7 +69,7 @@ namespace OrderManagementSystemApplication.Services.Implemntation
         {
             try
             {
-                if (await _repository.GetTableAsTracking()
+                if (await _unitOfWork.Customers.GetTableAsTracking()
                     .AnyAsync(c => c.Email.ToLower() == customerDto.Email.ToLower()))
                 {
                     _logger.LogWarning(CustomerLogMessages.EmailConflict, customerDto.Email);
@@ -81,7 +79,7 @@ namespace OrderManagementSystemApplication.Services.Implemntation
                 var customer = _mapper.Map<Customer>(customerDto);
                 customer.IsActive = true;
 
-                await _repository.AddAsync(customer);
+                await _unitOfWork.Customers.AddAsync(customer);
 
                 _logger.LogInformation(CustomerLogMessages.CustomerCreated, customer.Id);
                 return _responseHandler.Created<string>("Created successfully.");
@@ -91,7 +89,7 @@ namespace OrderManagementSystemApplication.Services.Implemntation
                 _logger.LogError(ex, CustomerLogMessages.ErrorCreatingCustomer, customerDto.Email);
                 return _responseHandler.InternalServerError<string>("Error creating customer.");
             }
-        
+
         }
 
         public async Task<ApiResponse<string>> UpdateCustomerAsync(CustomerUpdateDto customerDto)
@@ -99,7 +97,7 @@ namespace OrderManagementSystemApplication.Services.Implemntation
 
             try
             {
-                var customer = await _repository.GetByIdAsync(customerDto.CustomerId);
+                var customer = await _unitOfWork.Customers.GetByIdAsync(customerDto.CustomerId);
                 if (customer == null)
                 {
                     _logger.LogWarning(CustomerLogMessages.CustomerNotFound, customerDto.CustomerId);
@@ -107,7 +105,7 @@ namespace OrderManagementSystemApplication.Services.Implemntation
                 }
 
                 if (customer.Email != customerDto.Email &&
-                    await _repository.GetTableNoTracking()
+                    await _unitOfWork.Customers.GetTableNoTracking()
                         .AnyAsync(c => c.Email == customerDto.Email))
                 {
                     _logger.LogWarning(CustomerLogMessages.EmailConflict, customerDto.Email);
@@ -115,7 +113,7 @@ namespace OrderManagementSystemApplication.Services.Implemntation
                 }
 
                 _mapper.Map(customerDto, customer);
-                await _repository.SaveChangesAsync();
+                await _unitOfWork.Customers.SaveChangesAsync();
 
                 _logger.LogInformation(CustomerLogMessages.CustomerUpdated, customer.Id);
                 return _responseHandler.Updated("Updated successfully.");
@@ -127,5 +125,5 @@ namespace OrderManagementSystemApplication.Services.Implemntation
             }
         }
     }
-    }
+}
 

@@ -11,21 +11,21 @@ using OrderManagementSystemDomain.Repositories;
 
 namespace OrderManagementSystemApplication.Services.Implemntation
 {
-    public class ProductService(IProductRepository _productRepository, ICategoryRepository _categoryRepository,
-        ResponseHandler _responseHandler, IMapper _mapper, ILogger<ProductService> _logger, HybridCache _cache) : IProductService
+    public class ProductService(IUnitOfWork _unitOfWork,ResponseHandler _responseHandler, IMapper _mapper,
+        ILogger<ProductService> _logger, HybridCache _cache) : IProductService
     {
         public async Task<ApiResponse<String>> CreateProductAsync(ProductCreateDto productDto)
         {
             try
             {
-                if (await _productRepository.GetTableNoTracking()
+                if (await _unitOfWork.Products.GetTableNoTracking()
                     .AnyAsync(p => p.Name.ToLower() == productDto.Name.ToLower()))
                 {
                     _logger.LogWarning(ProductLogMessages.ProductNameConflict, productDto.Name);
                     return _responseHandler.Conflict<string>("Product name already exists.");
                 }
 
-                if (!await _categoryRepository.GetTableNoTracking()
+                if (!await _unitOfWork.Categorys.GetTableNoTracking()
                     .AnyAsync(c => c.Id == productDto.CategoryId))
                 {
                     _logger.LogWarning(ProductLogMessages.CategoryNotFound, productDto.CategoryId);
@@ -34,7 +34,7 @@ namespace OrderManagementSystemApplication.Services.Implemntation
 
                 var product = _mapper.Map<Product>(productDto);
                 product.IsAvailable = product.StockQuantity > 0;
-                await _productRepository.UpdateAsync(product);
+                await _unitOfWork.Products.UpdateAsync(product);
                 await _cache.RemoveAsync("products_by_category");
                 _logger.LogInformation(ProductLogMessages.ProductCreated, product.Id);
                 return _responseHandler.Created<string>("Created successfully.");
@@ -50,7 +50,7 @@ namespace OrderManagementSystemApplication.Services.Implemntation
         {
             try
             {
-                var product = await _productRepository.GetByIdAsync(id);
+                var product = await _unitOfWork.Products.GetByIdAsync(id);
                 if (product == null)
                 {
                     _logger.LogWarning(ProductLogMessages.ProductNotFound, id);
@@ -58,7 +58,7 @@ namespace OrderManagementSystemApplication.Services.Implemntation
                 }
 
                 product.IsAvailable = false;
-                await _productRepository.DeleteAsync(product);
+                await _unitOfWork.Products.DeleteAsync(product);
                 await _cache.RemoveAsync("products_by_category");
                 _logger.LogInformation(ProductLogMessages.ProductDeleted, id);
                 return _responseHandler.Deleted<string>();
@@ -79,7 +79,7 @@ namespace OrderManagementSystemApplication.Services.Implemntation
                      ("products_by_category",
                     async ct =>
                     {
-                        var products = await _productRepository.GetTableNoTracking()
+                        var products = await _unitOfWork.Products.GetTableNoTracking()
                             .Include(p => p.Category)
                             .Where(p => p.CategoryId == categoryId && p.IsAvailable)
                             .ToListAsync(ct);
@@ -111,7 +111,7 @@ namespace OrderManagementSystemApplication.Services.Implemntation
         {
             try
             {
-                var product = await _productRepository.GetTableNoTracking()
+                var product = await _unitOfWork.Products.GetTableNoTracking()
                     .FirstOrDefaultAsync(p => p.Id == id);
 
                 if (product == null)
@@ -137,7 +137,7 @@ namespace OrderManagementSystemApplication.Services.Implemntation
         {
             try
             {
-                var products = await _productRepository.GetTableNoTracking().ToListAsync();
+                var products = await _unitOfWork.Products.GetTableNoTracking().ToListAsync();
                 var result = _mapper.Map<List<ProductResponseDto>>(products);
 
                 _logger.LogInformation(ProductLogMessages.ProductsRetrieved, result.Count);
@@ -154,7 +154,7 @@ namespace OrderManagementSystemApplication.Services.Implemntation
         {
             try
             {
-                var product = await _productRepository.GetByIdAsync(dto.ProductId);
+                var product = await _unitOfWork.Products.GetByIdAsync(dto.ProductId);
                 if (product == null)
                 {
                     _logger.LogWarning(ProductLogMessages.ProductNotFound, dto.ProductId);
@@ -162,7 +162,7 @@ namespace OrderManagementSystemApplication.Services.Implemntation
                 }
 
                 product.IsAvailable = dto.IsAvailable;
-                await _productRepository.UpdateAsync(product);
+                await _unitOfWork.Products.UpdateAsync(product);
                 await _cache.RemoveAsync("products_by_category");
                 _logger.LogInformation(ProductLogMessages.ProductStatusUpdated, dto.ProductId);
                 return _responseHandler.Updated<string>("Updated successfully.");

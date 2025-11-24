@@ -12,16 +12,16 @@ using OrderManagementSystemDomain.Repositories;
 
 namespace OrderManagementSystemApplication.Services.Implemntation
 {
-    public class PaymentService(IPaymentRepository _paymentRepository,
-        IMapper _mapper, IOrderRepository _orderRepository, ILogger<PaymentService> _logger, ResponseHandler _responseHandler) : IPaymentService
+    public class PaymentService(IUnitOfWork _unitOfWork,
+        IMapper _mapper,ILogger<PaymentService> _logger, ResponseHandler _responseHandler) : IPaymentService
     {
         public async Task<ApiResponse<PaymentResponseDto>> ProcessPaymentAsync(PaymentRequestDto paymentRequest)
         {
-            using (var transaction = _paymentRepository.BeginTransaction())
+            using (var transaction = _unitOfWork.Payments.BeginTransaction())
             {
                 try
                 {
-                    var order = await _orderRepository.GetOrderWithPaymentAsync(paymentRequest.OrderId, paymentRequest.CustomerId);
+                    var order = await _unitOfWork.Orders.GetOrderWithPaymentAsync(paymentRequest.OrderId, paymentRequest.CustomerId);
                     if (order == null)
                     {
                         _logger.LogWarning(PaymentLogMessages.OrderNotFound, paymentRequest.OrderId, paymentRequest.CustomerId);
@@ -47,7 +47,7 @@ namespace OrderManagementSystemApplication.Services.Implemntation
                             payment.PaymentDate = DateTime.UtcNow;
                             payment.Status = PaymentStatus.Pending;
                             payment.TransactionId = null; // Clear previous transaction id if any
-                            await _paymentRepository.UpdateAsync(payment);
+                            await _unitOfWork.Payments.UpdateAsync(payment);
                         }
                         else
                         {
@@ -67,7 +67,7 @@ namespace OrderManagementSystemApplication.Services.Implemntation
                             PaymentDate = DateTime.UtcNow,
                             Status = PaymentStatus.Pending
                         };
-                        await _paymentRepository.AddAsync(payment);
+                        await _unitOfWork.Payments.AddAsync(payment);
                     }
                     // For non-COD payments, simulate payment processing
                     if (!IsCashOnDelivery(paymentRequest.PaymentMethod))
@@ -87,7 +87,7 @@ namespace OrderManagementSystemApplication.Services.Implemntation
                         // For COD, mark the order status as Processing immediately
                         order.OrderStatus = OrderStatus.Processing;
                     }
-                    await _paymentRepository.SaveChangesAsync();
+                    await _unitOfWork.Payments.SaveChangesAsync();
                     await transaction.CommitAsync();
 
                     var paymentResponse = _mapper.Map<PaymentResponseDto>(payment);
@@ -108,7 +108,7 @@ namespace OrderManagementSystemApplication.Services.Implemntation
         {
             try
             {
-                var payment = await _paymentRepository
+                var payment = await _unitOfWork.Payments
                 .GetTableNoTracking()
                 .FirstOrDefaultAsync(p => p.Id == paymentId);
                 if (payment == null)
@@ -141,7 +141,7 @@ namespace OrderManagementSystemApplication.Services.Implemntation
         {
             try
             {
-                var payment = await _paymentRepository.GetTableNoTracking()
+                var payment = await _unitOfWork.Payments.GetTableNoTracking()
                 .FirstOrDefaultAsync(p => p.OrderId == orderId);
                 if (payment == null)
                 {
@@ -174,7 +174,7 @@ namespace OrderManagementSystemApplication.Services.Implemntation
         {
             try
             {
-                var payment = await _paymentRepository.GetTableAsTracking()
+                var payment = await _unitOfWork.Payments.GetTableAsTracking()
                 .Include(p => p.Order)
                 .FirstOrDefaultAsync(p => p.Id == statusUpdate.PaymentId);
                 if (payment == null)
@@ -182,13 +182,12 @@ namespace OrderManagementSystemApplication.Services.Implemntation
                     return _responseHandler.NotFound<ConfirmationResponseDto>("Payment not found.");
                 }
                 payment.Status = statusUpdate.Status;
-                // Update order status if payment is now completed and the method is not COD
                 if (statusUpdate.Status == PaymentStatus.Completed && !IsCashOnDelivery(payment.PaymentMethod))
                 {
                     payment.TransactionId = statusUpdate.TransactionId;
                     payment.Order.OrderStatus = OrderStatus.Processing;
                 }
-                await _paymentRepository.SaveChangesAsync();
+                await _unitOfWork.Payments.SaveChangesAsync();
                 // Send Order Confirmation Email if Order Status is Processing
                 //if (payment.Order.OrderStatus == OrderStatus.Processing)
                 //{
@@ -207,7 +206,6 @@ namespace OrderManagementSystemApplication.Services.Implemntation
         }
         private async Task<PaymentStatus> SimulatePaymentGateway()
         {
-            //Simulate the PG
             await Task.Delay(TimeSpan.FromMilliseconds(1));
             int chance = Random.Shared.Next(1, 101); // 1 to 100
             if (chance <= 60)
@@ -217,12 +215,10 @@ namespace OrderManagementSystemApplication.Services.Implemntation
             else
                 return PaymentStatus.Failed;
         }
-        // Generate a unique 12-character transaction ID
         private string GenerateTransactionId()
         {
             return $"TXN-{Guid.NewGuid().ToString("N").ToUpper().Substring(0, 12)}";
         }
-        // Determines if the provided payment method indicates Cash on Delivery
         private bool IsCashOnDelivery(string paymentMethod)
         {
             return paymentMethod.Equals("CashOnDelivery", StringComparison.OrdinalIgnoreCase) ||

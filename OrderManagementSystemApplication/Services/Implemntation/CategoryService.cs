@@ -11,21 +11,21 @@ using OrderManagementSystemDomain.Repositories;
 
 namespace OrderManagementSystemApplication.Services.Implemntation
 {
-    public class CategoryService(ICategoryRepository _categoryRepository,
+    public class CategoryService(IUnitOfWork _unitOfWork,
         ResponseHandler _responseHandler, IMapper _mapper, ILogger<CategoryService> _logger, HybridCache _cache) : ICategoryService
     {
         public async Task<ApiResponse<string>> CreateCategoryAsync(CategoryCreateDto categoryDto)
         {
             try
             {
-                if (await _categoryRepository.GetTableNoTracking().AnyAsync(c => c.Name.ToLower() == categoryDto.Name.ToLower()))
+                if (await _unitOfWork.Categorys.GetTableNoTracking().AnyAsync(c => c.Name.ToLower() == categoryDto.Name.ToLower()))
                 {
                     _logger.LogWarning(CategoryLogMessages.CategoryNameConflict, categoryDto.Name);
                     return _responseHandler.Conflict<string>("Category name already exists.");
                 }
                 var category = _mapper.Map<Category>(categoryDto);
                 category.IsActive = true;
-                await _categoryRepository.AddAsync(category);
+                await _unitOfWork.Categorys.AddAsync(category);
                 await _cache.RemoveAsync("all_categories_cache_key");
                 _logger.LogInformation(CategoryLogMessages.CategoryCreated, categoryDto.Name);
                 return _responseHandler.Created("Created Successfully.");
@@ -51,7 +51,7 @@ namespace OrderManagementSystemApplication.Services.Implemntation
                 var categories = await _cache.GetOrCreateAsync("all_categories_cache_key",
                     async ct =>
                       {
-                          var result = await _categoryRepository
+                          var result = await _unitOfWork.Categorys
                           .GetTableNoTracking()
                           .ToListAsync(ct);
                           var categoryList = _mapper.Map<List<CategoryResponseDto>>(result);

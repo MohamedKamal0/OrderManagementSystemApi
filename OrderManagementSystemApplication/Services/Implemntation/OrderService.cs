@@ -13,9 +13,8 @@ using OrderManagementSystemDomain.Repositories;
 
 namespace OrderManagementSystemApplication.Services.Implemntation
 {
-    public class OrderService(IOrderRepository _orderRepository,
-        ICustomerRepository _customerRepository, IAddressRepository _addressRepository,
-        IProductRepository _productRepository, IShoppingRepository _shoppingRepository,
+    public class OrderService(IUnitOfWork _unitOfWork,
+
         IMapper _mapper, ResponseHandler _responseHandler, ILogger<OrderService> _logger, HybridCache _cache) : IOrderService
     {
 
@@ -23,17 +22,17 @@ namespace OrderManagementSystemApplication.Services.Implemntation
         {
             try
             {
-                var customer = await _customerRepository.GetByIdAsync(orderDto.CustomerId);
+                var customer = await _unitOfWork.Customers.GetByIdAsync(orderDto.CustomerId);
                 if (customer == null)
                 {
                     return _responseHandler.NotFound<string>("Customer does not exist.");
                 }
-                var billingAddress = await _addressRepository.GetByIdAsync(orderDto.BillingAddressId);
+                var billingAddress = await _unitOfWork.Addresses.GetByIdAsync(orderDto.BillingAddressId);
                 if (billingAddress == null || billingAddress.CustomerId != orderDto.CustomerId)
                 {
                     return _responseHandler.BadRequest<string>("Billing Address is invalid or does not belong to the customer.");
                 }
-                var shippingAddress = await _addressRepository.GetByIdAsync(orderDto.ShippingAddressId);
+                var shippingAddress = await _unitOfWork.Addresses.GetByIdAsync(orderDto.ShippingAddressId);
                 if (shippingAddress == null || shippingAddress.CustomerId != orderDto.CustomerId)
                 {
                     return _responseHandler.BadRequest<string>("Shipping Address is invalid or does not belong to the customer.");
@@ -46,7 +45,7 @@ namespace OrderManagementSystemApplication.Services.Implemntation
                 var orderItems = new List<OrderItem>();
                 foreach (var itemDto in orderDto.OrderItems)
                 {
-                    var product = await _productRepository.GetByIdAsync(itemDto.ProductId);
+                    var product = await _unitOfWork.Products.GetByIdAsync(itemDto.ProductId);
                     if (product == null)
                     {
                         _logger.LogWarning(OrderLogMessages.ProductNotFound, itemDto.ProductId);
@@ -72,7 +71,7 @@ namespace OrderManagementSystemApplication.Services.Implemntation
                     totalBaseAmount += basePrice;
                     totalDiscountAmount += discount;
                     product.StockQuantity -= itemDto.Quantity;
-                    await _productRepository.UpdateAsync(product);
+                    await _unitOfWork.Products.UpdateAsync(product);
                 }
                 totalAmount = totalBaseAmount - totalDiscountAmount + shippingCost;
                 var order = _mapper.Map<Order>(orderDto);
@@ -85,17 +84,17 @@ namespace OrderManagementSystemApplication.Services.Implemntation
                 order.OrderStatus = OrderStatus.Pending;
                 order.OrderDate = DateTime.UtcNow;
 
-                await _orderRepository.AddAsync(order);
-                var cart = await _shoppingRepository.GetTableAsTracking().
+                await _unitOfWork.Orders.AddAsync(order);
+                var cart = await _unitOfWork.Carts.GetTableAsTracking().
                     FirstOrDefaultAsync(c => c.CustomerId == orderDto.CustomerId && !c.IsCheckedOut);
                 if (cart != null)
                 {
                     cart.IsCheckedOut = true;
                     cart.UpdatedAt = DateTime.UtcNow;
-                    await _shoppingRepository.UpdateAsync(cart);
+                    await _unitOfWork.Carts.UpdateAsync(cart);
 
                 }
-                await _orderRepository.SaveChangesAsync();
+                await _unitOfWork.Orders.SaveChangesAsync();
                 _logger.LogInformation(OrderLogMessages.OrderCreated, orderNumber, orderDto.CustomerId);
 
                 return _responseHandler.Created($"Order {orderNumber} created successfully.");
@@ -112,7 +111,7 @@ namespace OrderManagementSystemApplication.Services.Implemntation
         {
             try
             {
-                var order = await _orderRepository.GetOrderWithDetailsAsync(orderId);
+                var order = await _unitOfWork.Orders.GetOrderWithDetailsAsync(orderId);
                 if (order == null)
                 {
                     _logger.LogWarning(OrderLogMessages.OrderNotFound, orderId);
@@ -136,7 +135,7 @@ namespace OrderManagementSystemApplication.Services.Implemntation
             try
             {
 
-                var customer = await _customerRepository.GetCustomerWithOrdersAsync(customerId);
+                var customer = await _unitOfWork.Customers.GetCustomerWithOrdersAsync(customerId);
                 if (customer == null)
                 {
                     _logger.LogWarning(OrderLogMessages.CustomerNotFound, customerId);
@@ -159,7 +158,7 @@ namespace OrderManagementSystemApplication.Services.Implemntation
         {
             try
             {
-                var order = await _orderRepository.GetTableNoTracking().FirstOrDefaultAsync(o => o.Id == statusDto.OrderId);
+                var order = await _unitOfWork.Orders.GetTableNoTracking().FirstOrDefaultAsync(o => o.Id == statusDto.OrderId);
                 if (order == null)
                 {
                     _logger.LogWarning(OrderLogMessages.OrderNotFound, statusDto.OrderId);
@@ -181,7 +180,7 @@ namespace OrderManagementSystemApplication.Services.Implemntation
                     return _responseHandler.BadRequest<string>($"Cannot change order status from {currentStatus} to {newStatus}.");
                 }
                 order.OrderStatus = newStatus;
-                await _orderRepository.SaveChangesAsync();
+                await _unitOfWork.Orders.SaveChangesAsync();
                 _logger.LogInformation(OrderLogMessages.OrderStatusUpdated,
                   statusDto.OrderId, currentStatus, newStatus);
 

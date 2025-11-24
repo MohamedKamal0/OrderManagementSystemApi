@@ -10,17 +10,17 @@ using OrderManagementSystemDomain.Repositories;
 
 namespace OrderManagementSystemApplication.Services.Implemntation
 {
-    public class ShoppingService(IShoppingRepository _shoppingRepository,
-        IProductRepository _productRepository, ICartItemsRepository _cartItemsRepository,
+    public class ShoppingService(IUnitOfWork _unitOfWork,
+         ICartItemsRepository _cartItemsRepository,
         IMapper _mapper, ResponseHandler _responseHandler, ILogger<ShoppingService> _logger) : IShoppingService
     {
         public async Task<ApiResponse<string>> AddToCartAsync(AddShoppingDto addToCartDto)
         {
-            var transaction = _shoppingRepository.BeginTransaction();
+            var transaction = _unitOfWork.Carts.BeginTransaction();
 
             try
             {
-                var product = await _productRepository.GetByIdAsync(addToCartDto.ProductId);
+                var product = await _unitOfWork.Products.GetByIdAsync(addToCartDto.ProductId);
                 if (product == null)
                 {
                     _logger.LogWarning(ShoppingCartLogMessages.ProductNotFound, addToCartDto.ProductId);
@@ -33,7 +33,7 @@ namespace OrderManagementSystemApplication.Services.Implemntation
                             addToCartDto.ProductId, addToCartDto.Quantity, product.StockQuantity);
                     return _responseHandler.BadRequest<string>($"Only {product.StockQuantity} units of {product.Name} are available.");
                 }
-                var cart = await _shoppingRepository.GetActiveCartByCustomerAsync(addToCartDto.CustomerId);
+                var cart = await _unitOfWork.Carts.GetActiveCartByCustomerAsync(addToCartDto.CustomerId);
 
                 if (cart == null)
                 {
@@ -45,8 +45,8 @@ namespace OrderManagementSystemApplication.Services.Implemntation
                         UpdatedAt = DateTime.UtcNow,
                         CartItems = new List<CartItem>()
                     };
-                    await _shoppingRepository.AddAsync(cart);
-                    await _shoppingRepository.SaveChangesAsync();
+                    await _unitOfWork.Carts.AddAsync(cart);
+                    await _unitOfWork.Carts.SaveChangesAsync();
                 }
 
                 var existingCartItem = cart.CartItems.FirstOrDefault(ci => ci.ProductId == addToCartDto.ProductId);
@@ -83,15 +83,15 @@ namespace OrderManagementSystemApplication.Services.Implemntation
                     await _cartItemsRepository.AddAsync(cartItem);
                 }
                 cart.UpdatedAt = DateTime.UtcNow;
-                await _shoppingRepository.UpdateAsync(cart);
+                await _unitOfWork.Carts.UpdateAsync(cart);
 
                 product.StockQuantity -= addToCartDto.Quantity;
-                await _productRepository.UpdateAsync(product);
+                await _unitOfWork.Products.UpdateAsync(product);
 
-                await _shoppingRepository.SaveChangesAsync();
+                await _unitOfWork.Carts.SaveChangesAsync();
                 await transaction.CommitAsync();
 
-                cart = await _shoppingRepository.GetCartByIdAsync(cart.Id);
+                cart = await _unitOfWork.Carts.GetCartByIdAsync(cart.Id);
                 var cartDTO = _mapper.Map<ShoppingResponseDto>(cart);
                 _logger.LogInformation(ShoppingCartLogMessages.TransactionCommitted, addToCartDto.CustomerId);
 
@@ -112,7 +112,7 @@ namespace OrderManagementSystemApplication.Services.Implemntation
         {
             try
             {
-                var cart = await _shoppingRepository.GetCartByIdAsync(customerId);
+                var cart = await _unitOfWork.Carts.GetCartByIdAsync(customerId);
 
                 if (cart == null)
                 {
@@ -145,7 +145,7 @@ namespace OrderManagementSystemApplication.Services.Implemntation
         {
             try
             {
-                var cart = await _shoppingRepository.GetActiveCartByCustomerAsync(customerId);
+                var cart = await _unitOfWork.Carts.GetActiveCartByCustomerAsync(customerId);
 
                 if (cart == null)
                 {
@@ -180,7 +180,7 @@ namespace OrderManagementSystemApplication.Services.Implemntation
         {
             try
             {
-                var cart = await _shoppingRepository.GetActiveCartByCustomerAsync(removeCartItemDto.CustomerId);
+                var cart = await _unitOfWork.Carts.GetActiveCartByCustomerAsync(removeCartItemDto.CustomerId);
 
                 if (cart == null)
                 {
@@ -197,7 +197,7 @@ namespace OrderManagementSystemApplication.Services.Implemntation
                 await _cartItemsRepository.DeleteAsync(cartItem);
                 cart.UpdatedAt = DateTime.UtcNow;
                 await _cartItemsRepository.SaveChangesAsync();
-                cart = await _shoppingRepository.GetCartByIdAsync(removeCartItemDto.CartItemId);
+                cart = await _unitOfWork.Carts.GetCartByIdAsync(removeCartItemDto.CartItemId);
 
                 var cartDTO = _mapper.Map<ShoppingResponseDto>(cart);
                 _logger.LogInformation(ShoppingCartLogMessages.CartItemRemoved,

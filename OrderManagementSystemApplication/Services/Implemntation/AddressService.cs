@@ -10,8 +10,7 @@ using OrderManagementSystemDomain.Repositories;
 
 namespace OrderManagementSystemApplication.Services.Implemntation
 {
-    public class AddressService(IAddressRepository _repository,
-        ICustomerRepository _customerRepository, ILogger<AddressService> _logger,
+    public class AddressService(IUnitOfWork _unitOfWork, ILogger<AddressService> _logger,
         IMapper _mapper, ResponseHandler _responseHandler) : IAddressService
     {
         public async Task<ApiResponse<string>> CreateAddressAsync(AddressCreateDto addressDto)
@@ -19,7 +18,7 @@ namespace OrderManagementSystemApplication.Services.Implemntation
 
             try
             {
-                var customer = await _customerRepository.GetByIdAsync(addressDto.CustomerId);
+                var customer = await _unitOfWork.Customers.GetByIdAsync(addressDto.CustomerId);
                 if (customer == null)
                 {
                     _logger.LogWarning(AddressLogMessages.CustomerNotFound, addressDto.CustomerId);
@@ -27,7 +26,7 @@ namespace OrderManagementSystemApplication.Services.Implemntation
                 }
 
                 var address = _mapper.Map<Address>(addressDto);
-                await _repository.AddAsync(address);
+                await _unitOfWork.Addresses.AddAsync(address);
 
                 _logger.LogInformation(AddressLogMessages.AddressCreated, address.Id, address.CustomerId);
                 return _responseHandler.Created($"Address created successfully with ID: {address.Id}");
@@ -44,7 +43,7 @@ namespace OrderManagementSystemApplication.Services.Implemntation
 
             try
             {
-                var address = await _repository.GetTableAsTracking()
+                var address = await _unitOfWork.Addresses.GetTableAsTracking()
                     .FirstOrDefaultAsync(a => a.Id == addressDeleteDto.AddressId &&
                                             a.CustomerId == addressDeleteDto.CustomerId);
 
@@ -56,7 +55,7 @@ namespace OrderManagementSystemApplication.Services.Implemntation
                         $"Address with ID {addressDeleteDto.AddressId} not found for customer {addressDeleteDto.CustomerId}.");
                 }
 
-                await _repository.DeleteAsync(address);
+                await _unitOfWork.Addresses.DeleteAsync(address);
                 _logger.LogInformation(AddressLogMessages.AddressDeleted,
                     addressDeleteDto.AddressId, addressDeleteDto.CustomerId);
 
@@ -74,7 +73,7 @@ namespace OrderManagementSystemApplication.Services.Implemntation
         {
             try
             {
-                var address = await _repository.GetTableNoTracking()
+                var address = await _unitOfWork.Addresses.GetTableNoTracking()
                     .FirstOrDefaultAsync(a => a.Id == id);
 
                 if (address == null)
@@ -100,7 +99,7 @@ namespace OrderManagementSystemApplication.Services.Implemntation
 
             try
             {
-                var customer = await _customerRepository.GetTableNoTracking()
+                var customer = await _unitOfWork.Customers.GetTableNoTracking()
                     .Include(c => c.Addresses)
                     .FirstOrDefaultAsync(c => c.Id == customerId);
 
@@ -126,7 +125,7 @@ namespace OrderManagementSystemApplication.Services.Implemntation
         {
             try
             {
-                var address = await _repository.GetTableAsTracking()
+                var address = await _unitOfWork.Addresses.GetTableAsTracking()
                     .FirstOrDefaultAsync(a => a.Id == addressDto.AddressId &&
                                             a.CustomerId == addressDto.CustomerId);
 
@@ -140,7 +139,7 @@ namespace OrderManagementSystemApplication.Services.Implemntation
                 }
 
                 _mapper.Map(addressDto, address);
-                await _repository.UpdateAsync(address);
+                await _unitOfWork.Addresses.UpdateAsync(address);
 
                 _logger.LogInformation(AddressLogMessages.AddressUpdated,
                     addressDto.AddressId, addressDto.CustomerId);
