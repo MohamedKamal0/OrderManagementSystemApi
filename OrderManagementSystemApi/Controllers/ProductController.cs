@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using OrderManagementSystemApplication.BaseResponse;
 using OrderManagementSystemApplication.Dtos;
@@ -12,46 +12,49 @@ namespace OrderManagementSystemApi.Controllers
     public class ProductController(IProductService _productService) : ControllerBase
     {
         [HttpPost("CreateProduct")]
+        [Authorize]
         public async Task<ActionResult<ApiResponse<ProductResponseDto>>> CreateProduct([FromBody] ProductCreateDto productDto)
         {
             var response = await _productService.CreateProductAsync(productDto);
-            
+
             return Ok(response);
         }
         [HttpGet("GetProductById/{id}")]
         public async Task<ActionResult<ApiResponse<ProductResponseDto>>> GetProductById(int id)
         {
             var response = await _productService.GetProductByIdAsync(id);
-            
+
             return Ok(response);
         }
-        
+
         [HttpDelete("DeleteProduct/{id}")]
+        [Authorize]
         public async Task<ActionResult<ApiResponse<ConfirmationResponseDto>>> DeleteProduct(int id)
         {
             var response = await _productService.DeleteProductAsync(id);
-            
+
             return Ok(response);
         }
         [HttpGet("GetAllProducts")]
         public async Task<ActionResult<ApiResponse<List<ProductResponseDto>>>> GetAllProducts()
         {
             var response = await _productService.GetAllProductsAsync();
-            
+
             return Ok(response);
         }
         [HttpGet("GetAllProductsByCategory/{categoryId}")]
         public async Task<ActionResult<ApiResponse<List<ProductResponseDto>>>> GetAllProductsByCategory(int categoryId)
         {
             var response = await _productService.GetAllProductsByCategoryAsync(categoryId);
-            
+
             return Ok(response);
         }
         [HttpPut("UpdateProductStatus")]
+        [Authorize]
         public async Task<ActionResult<ApiResponse<ConfirmationResponseDto>>> UpdateProductStatus(ProductStatusUpdateDto productStatusUpdateDTO)
         {
             var response = await _productService.UpdateProductStatusAsync(productStatusUpdateDTO);
-           
+
             return Ok(response);
         }
     }

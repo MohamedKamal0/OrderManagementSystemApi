@@ -15,6 +15,8 @@ namespace OrderManagementSystemInfrastructure.Data
             modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
 
         }
+        public DbSet<User> Users { get; set; }
+
         public DbSet<Customer> Customers { get; set; }
         public DbSet<Address> Addresses { get; set; }
         public DbSet<Status> Statuses { get; set; }
