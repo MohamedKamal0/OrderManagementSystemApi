@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using OrderManagementSystemApplication.BaseResponse;
 using OrderManagementSystemApplication.Dtos;
 using OrderManagementSystemApplication.Dtos.Order;
@@ -20,6 +21,7 @@ namespace OrderManagementSystemApi.Controllers
             return Ok(response);
         }
         [HttpGet("GetOrderById/{id}")]
+        [EnableRateLimiting("DefaultPolicy")]
         public async Task<ActionResult<ApiResponse<OrderResponseDto>>> GetOrderById(int id)
         {
             var response = await _orderService.GetOrderByIdAsync(id);
@@ -27,6 +29,7 @@ namespace OrderManagementSystemApi.Controllers
             return Ok(response);
         }
         [HttpGet("GetOrdersByCustomer/{customerId}")]
+        [EnableRateLimiting("DefaultPolicy")]
         public async Task<ActionResult<ApiResponse<List<OrderResponseDto>>>> GetOrdersByCustomer(int customerId)
         {
             var response = await _orderService.GetOrdersByCustomerAsync(customerId);

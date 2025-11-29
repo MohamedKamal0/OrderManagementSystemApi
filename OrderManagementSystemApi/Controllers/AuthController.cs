@@ -23,7 +23,7 @@ namespace OrderManagementSystemAPI.Controllers
         }
 
         [HttpPost("login")]
-        public async Task<ActionResult<ApiResponse<string>>> Login([FromBody] LoginRequest model)
+        public async Task<ActionResult<ApiResponse<LoginRequest>>> Login([FromBody] LoginRequest model)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
@@ -34,12 +34,8 @@ namespace OrderManagementSystemAPI.Controllers
 
             var token = _userService.GenerateJwtToken(response.Data);
 
-            return Ok(new ApiResponse<string>
-            {
-                StatusCode = System.Net.HttpStatusCode.OK,
-                Data = token,
-                Message = "Login successful"
-            });
+
+            return Ok(token);
         }
     }
 }

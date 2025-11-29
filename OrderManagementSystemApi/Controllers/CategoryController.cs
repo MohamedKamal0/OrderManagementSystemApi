@@ -1,5 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using OrderManagementSystemApplication.BaseResponse;
 using OrderManagementSystemApplication.Dtos.Category;
 using OrderManagementSystemApplication.Services.Abstract;
@@ -14,14 +14,15 @@ namespace OrderManagementSystemApi.Controllers
         public async Task<ActionResult<ApiResponse<CategoryResponseDto>>> CreateCategory([FromBody] CategoryCreateDto categoryDto)
         {
             var response = await _categoryService.CreateCategoryAsync(categoryDto);
-            
+
             return Ok(response);
         }
         [HttpGet("GetAllCategories")]
+        [EnableRateLimiting("DefaultPolicy")]
         public async Task<ActionResult<ApiResponse<List<CategoryResponseDto>>>> GetAllCategories()
         {
             var response = await _categoryService.GetAllCategoriesAsync();
-           
+
             return Ok(response);
         }
     }

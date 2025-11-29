@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using OrderManagementSystemApplication.BaseResponse;
 using OrderManagementSystemApplication.Dtos;
 using OrderManagementSystemApplication.Dtos.Product;
@@ -36,6 +37,7 @@ namespace OrderManagementSystemApi.Controllers
             return Ok(response);
         }
         [HttpGet("GetAllProducts")]
+        [EnableRateLimiting("DefaultPolicy")]
         public async Task<ActionResult<ApiResponse<List<ProductResponseDto>>>> GetAllProducts()
         {
             var response = await _productService.GetAllProductsAsync();
@@ -43,6 +45,7 @@ namespace OrderManagementSystemApi.Controllers
             return Ok(response);
         }
         [HttpGet("GetAllProductsByCategory/{categoryId}")]
+        [EnableRateLimiting("DefaultPolicy")]
         public async Task<ActionResult<ApiResponse<List<ProductResponseDto>>>> GetAllProductsByCategory(int categoryId)
         {
             var response = await _productService.GetAllProductsByCategoryAsync(categoryId);
