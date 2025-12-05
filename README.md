@@ -1,210 +1,133 @@
 # Order Management System API
 
-A comprehensive e-commerce order management system built with ASP.NET Core 8.0, following Clean Architecture principles and Domain-Driven Design (DDD) patterns.
+A comprehensive e-commerce order management system built with ASP.NET Core 8.0, implementing Clean Architecture principles with Domain-Driven Design (DDD).
 
 ## 🏗️ Architecture
 
-This project implements a layered architecture with clear separation of concerns:
+This project follows Clean Architecture with four main layers:
 
-- **API Layer**: RESTful API endpoints with Swagger documentation
-- **Application Layer**: Business logic, DTOs, and service implementations
 - **Domain Layer**: Core business entities and repository interfaces
-- **Infrastructure Layer**: Data access, Entity Framework Core configurations
+- **Application Layer**: Business logic, DTOs, services, and AutoMapper profiles
+- **Infrastructure Layer**: Data access, EF Core configurations, and repository implementations
+- **API Layer**: RESTful endpoints, authentication, rate limiting, and Swagger documentation
 
-## ✨ Features
+## 🚀 Features
 
 ### Core Functionality
-- **Customer Management**: Registration, profile updates, and account management
-- **Product Catalog**: Category-based product organization with inventory tracking
-- **Shopping Cart**: Add, update, and remove items with real-time price calculations
-- **Order Processing**: Complete order workflow from creation to fulfillment
-- **Payment Integration**: Multiple payment methods including COD and online payments
-- **Address Management**: Multiple shipping and billing addresses per customer
+- **Customer Management**: Registration, profile updates, and soft deletion
+- **Product Catalog**: Category-based product organization with availability tracking
+- **Shopping Cart**: Add/remove items, quantity management, automatic pricing calculations
+- **Order Processing**: Multi-step order creation with address validation and inventory management
+- **Payment Gateway**: Multiple payment methods (Credit/Debit Card, PayPal, Cash on Delivery)
+- **Order Tracking**: Real-time status updates with state transition validation
 
 ### Technical Features
-- **Authentication & Authorization**: JWT-based security
-- **Caching Strategy**: Hybrid caching with Redis and SQL Server
-- **Structured Logging**: Serilog integration for comprehensive logging
-- **Data Validation**: Comprehensive validation using Data Annotations
-- **AutoMapper**: Object-to-object mapping for DTOs
-- **Repository Pattern**: Generic repository with Unit of Work
-- **Entity Configurations**: Fluent API configurations for all entities
+- **Authentication & Authorization**: JWT-based authentication with permission-based access control
+- **Caching Strategy**: Hybrid caching (L1/L2/L3) with Redis and SQL Server
+- **Rate Limiting**: Fixed window rate limiting (100 requests/minute)
+- **Logging**: Structured logging with Serilog
+- **Data Validation**: Comprehensive input validation with Data Annotations
+- **Transaction Management**: Unit of Work pattern with ACID compliance
 
-## 🛠️ Technologies
+## 📋 Prerequisites
 
-- **.NET 8.0**
-- **Entity Framework Core 9.0**
-- **SQL Server**
-- **Redis Cache**
-- **Serilog**
-- **AutoMapper**
-- **JWT Authentication**
-- **Swagger/OpenAPI**
-
-## 📦 Project Structure
-```
-OrderManagementSystemApi/
-├── OrderManagementSystemApi/           # API Layer
-│   ├── Controllers/                    # API Controllers
-│   ├── Program.cs                      # Application entry point
-│   └── appsettings.json               # Configuration
-│
-├── OrderManagementSystemApplication/   # Application Layer
-│   ├── Dtos/                          # Data Transfer Objects
-│   ├── Services/                      # Business logic services
-│   ├── Mapping/                       # AutoMapper profiles
-│   └── Helpers/                       # Log messages & utilities
-│
-├── OrderManagementSystemDomain/        # Domain Layer
-│   ├── Models/                        # Domain entities
-│   ├── Enums/                         # Domain enumerations
-│   └── Repositories/                  # Repository interfaces
-│
-└── OrderManagementSystemInfrastructure/ # Infrastructure Layer
-    ├── Data/                          # DbContext
-    ├── Configurations/                # EF Core configurations
-    ├── Repository/                    # Repository implementations
-    └── Migrations/                    # Database migrations
-```
-
-## 🚀 Getting Started
-
-### Prerequisites
 - .NET 8.0 SDK
-- SQL Server
-- Redis Server (optional, for caching)
+- SQL Server 2019+
+- Redis Server (for distributed caching)
+- Visual Studio 2022 or JetBrains Rider
 
-### Installation
+## 🛠️ Installation
 
 1. **Clone the repository**
 ```bash
-   git clone https://github.com/yourusername/order-management-system.git
-   cd order-management-system
+git clone https://github.com/yourusername/OrderManagementSystemApi.git
+cd OrderManagementSystemApi
 ```
 
 2. **Update connection strings**
-   
-   Edit `appsettings.json` in the API project:
+
+Edit `appsettings.json`:
 ```json
-   {
-     "ConnectionStrings": {
-       "DefaultConnstring": "your-sql-server-connection-string",
-       "Redis": "localhost:6379"
-     }
-   }
+{
+  "ConnectionStrings": {
+    "DefaultConnstring": "Server=.;Database=Ordersystemapi;Trusted_Connection=True;TrustServerCertificate=true;",
+    "Redis": "localhost:6379"
+  }
+}
 ```
 
-3. **Apply database migrations**
+3. **Run database migrations**
 ```bash
-   dotnet ef database update --project OrderManagementSystemInfrastructure
+dotnet ef database update --project OrderManagementSystemInfrastructure --startup-project OrderManagementSystemApi
 ```
 
-4. **Run the application**
+4. **Build and run**
 ```bash
-   cd OrderManagementSystemApi
-   dotnet run
+dotnet build
+dotnet run --project OrderManagementSystemApi
 ```
 
-5. **Access Swagger UI**
-   
-   Navigate to: `https://localhost:7018/swagger`
+The API will be available at `https://localhost:7018` and `http://localhost:5295`
 
-## 📚 API Endpoints
+## 📚 API Documentation
 
-### Authentication
+Once running, access Swagger UI at: `https://localhost:7018/swagger`
+
+### Key Endpoints
+
+#### Authentication
 - `POST /api/Auth/register` - Register new user
-- `POST /api/Auth/login` - User login
+- `POST /api/Auth/login` - Login and receive JWT token
 
-### Customers
-- `POST /api/Customer/RegisterCustomer` - Register customer
+#### Customers
+- `POST /api/Customer/RegisterCustomer` - Register new customer
 - `GET /api/Customer/GetCustomerById/{id}` - Get customer details
-- `PUT /api/Customer/UpdateCustomer` - Update customer
-- `DELETE /api/Customer/DeleteCustomer/{id}` - Delete customer
+- `PUT /api/Customer/UpdateCustomer` - Update customer information
+- `DELETE /api/Customer/DeleteCustomer/{id}` - Soft delete customer
 
-### Products
-- `POST /api/Product/CreateProduct` - Create product (Auth required)
-- `GET /api/Product/GetProductById/{id}` - Get product details
+#### Products
+- `POST /api/Product/CreateProduct` - Create new product (requires Write permission)
 - `GET /api/Product/GetAllProducts` - List all products
-- `GET /api/Product/GetAllProductsByCategory/{categoryId}` - Products by category
-- `PUT /api/Product/UpdateProductStatus` - Update product status (Auth required)
-- `DELETE /api/Product/DeleteProduct/{id}` - Delete product (Auth required)
+- `GET /api/Product/GetAllProductsByCategory/{categoryId}` - Filter by category
+- `PUT /api/Product/UpdateProductStatus` - Update product availability
 
-### Shopping Cart
-- `GET /api/Shopping/GetCart/{customerId}` - Get customer cart (Auth required)
-- `POST /api/Shopping/AddToCart` - Add item to cart (Auth required)
-- `DELETE /api/Shopping/RemoveCartItem` - Remove cart item (Auth required)
-- `DELETE /api/Shopping/ClearCart` - Clear cart (Auth required)
+#### Shopping Cart
+- `GET /api/Shopping/GetCart/{customerId}` - Get customer's cart
+- `POST /api/Shopping/AddToCart` - Add item to cart
+- `DELETE /api/Shopping/RemoveCartItem` - Remove item from cart
+- `DELETE /api/Shopping/ClearCart` - Clear entire cart
 
-### Orders
-- `POST /api/Order/CreateOrder` - Create new order (Auth required)
+#### Orders
+- `POST /api/Order/CreateOrder` - Create new order (requires authentication)
 - `GET /api/Order/GetOrderById/{id}` - Get order details
-- `GET /api/Order/GetOrdersByCustomer/{customerId}` - Customer orders
-- `PUT /api/Order/UpdateOrderStatus` - Update order status (Auth required)
+- `GET /api/Order/GetOrdersByCustomer/{customerId}` - Get customer orders
+- `PUT /api/Order/UpdateOrderStatus` - Update order status
 
-### Payments
-- `POST /api/Payment/ProcessPayment` - Process payment (Auth required)
-- `GET /api/Payment/GetPaymentById/{paymentId}` - Get payment details (Auth required)
-- `GET /api/Payment/GetPaymentByOrderId/{orderId}` - Get payment by order (Auth required)
-- `PUT /api/Payment/UpdatePaymentStatus` - Update payment status (Auth required)
-
-### Categories
-- `POST /api/Category/CreateCategory` - Create category
-- `GET /api/Category/GetAllCategories` - List all categories
-
-### Addresses
-- `POST /api/Address/CreateAddress` - Create address
-- `GET /api/Address/GetAddressById/{id}` - Get address details
-- `PUT /api/Address/UpdateAddress` - Update address
-- `DELETE /api/Address/DeleteAddress` - Delete address
-- `GET /api/Address/GetAddressesByCustomer/{customerId}` - Customer addresses
+#### Payments
+- `POST /api/Payment/ProcessPayment` - Process payment (requires authentication)
+- `GET /api/Payment/GetPaymentById/{paymentId}` - Get payment details
+- `PUT /api/Payment/UpdatePaymentStatus` - Update payment status
 
 ## 🗄️ Database Schema
 
 ### Core Entities
-- **Customer**: Customer information and authentication
-- **Product**: Product catalog with pricing and inventory
-- **Category**: Product categorization
-- **Cart/CartItem**: Shopping cart management
-- **Order/OrderItem**: Order processing
-- **Payment**: Payment tracking
-- **Address**: Customer addresses
-- **Cancellation/Refund**: Order cancellation and refund processing
+
+**Customers**: Customer information with addresses and order history
+**Products**: Product catalog with categories, pricing, and inventory
+**Categories**: Product categorization
+**Orders**: Order header with status tracking
+**OrderItems**: Line items for each order
+**Payments**: Payment transactions and status
+**Cart/CartItems**: Shopping cart management
+**Addresses**: Customer shipping and billing addresses
+
+### Enums
+
+- `OrderStatus`: Pending, Processing, Shipped, Delivered, Canceled
+- `PaymentStatus`: Pending, Completed, Failed, Refunded
+- `Permission`: Read, Write, Delete, Update
 
 ## 🔐 Security
-
-- JWT-based authentication
-- Password hashing using SHA256
-- Role-based authorization (User/Admin)
-- Protected endpoints with `[Authorize]` attribute
-
-## 📊 Caching Strategy
-
-The system implements a three-tier caching approach:
-- **L1**: In-memory cache (30 seconds expiration)
-- **L2**: Redis distributed cache
-- **L3**: SQL Server cache (10 minutes expiration)
-
-Used for frequently accessed data like categories and products by category.
-
-## 🔍 Logging
-
-Structured logging with Serilog:
-- Console output with detailed formatting
-- Contextual logging throughout the application
-- Request/response logging middleware
-- Custom log messages for business operations
-
-## 🧪 Best Practices
-
-- **Clean Architecture**: Clear separation of concerns
-- **Repository Pattern**: Data access abstraction
-- **Unit of Work**: Transaction management
-- **DTOs**: Separate data contracts from domain models
-- **Validation**: Input validation at multiple layers
-- **Error Handling**: Consistent error response format
-- **Async/Await**: Asynchronous operations throughout
-
-## 📝 Configuration
 
 ### JWT Configuration
 ```json
@@ -213,40 +136,85 @@ Structured logging with Serilog:
     "Issuer": "your-issuer",
     "Audience": "your-audience",
     "Lifetime": 30,
-    "SigningKey": "your-secret-key-at-least-32-characters"
+    "SigningKey": "your-256-bit-secret-key"
   }
 }
 ```
 
-### Cache Configuration
-Configured in `Program.cs`:
-- Redis: Instance name "OrderManagementSystem"
-- Distributed SQL Server Cache: Table "CacheEntries"
-- Hybrid Cache: 10 min L2/L3, 30 sec L1
+### Permission-Based Authorization
 
-## 🤝 Contributing
+The system uses custom permission attributes:
+```csharp
+[CheckPermission(Permission.Write)]
+public async Task<ActionResult> CreateProduct(...)
+```
 
-Contributions are welcome! Please follow these steps:
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+## 🎯 Design Patterns
 
-## 📄 License
+- **Repository Pattern**: Data access abstraction
+- **Unit of Work**: Transaction management
+- **Dependency Injection**: Loose coupling between layers
+- **AutoMapper**: Object-to-object mapping
+- **Response Handler**: Standardized API responses
+- **Strategy Pattern**: Payment method processing
 
-This project is licensed under the MIT License.
+## 📊 Caching Strategy
+
+The system implements three-tier caching:
+
+- **L1 Cache**: In-memory (30 seconds TTL)
+- **L2 Cache**: Redis distributed cache
+- **L3 Cache**: SQL Server cache (10 minutes TTL)
+
+Example configuration:
+```csharp
+builder.Services.AddHybridCache(options =>
+{
+    options.DefaultEntryOptions = new HybridCacheEntryOptions
+    {
+        Expiration = TimeSpan.FromMinutes(10), // L2, L3 
+        LocalCacheExpiration = TimeSpan.FromSeconds(30) // L1
+    };
+});
+```
+
+## 🧪 Testing
+
+Run tests with:
+```bash
+dotnet test
+```
+
+## 📝 Logging
+
+Logs are configured with Serilog and written to the console. To customize logging:
+
+```json
+{
+  "Serilog": {
+    "MinimumLevel": {
+      "Default": "Information",
+      "Override": {
+        "Microsoft": "Warning",
+        "System": "Warning"
+      }
+    }
+  }
+}
+```
+
+## 🚦 Rate Limiting
+
+Default rate limiting is configured as:
+- 100 requests per minute
+- 10 queued requests
+- FIFO queue processing
+
 
 ## 👥 Authors
 
-- Your Name - Initial work
-
-## 🙏 Acknowledgments
-
-- Clean Architecture pattern by Robert C. Martin
-- Entity Framework Core documentation
-- ASP.NET Core best practices
+- Mohamed Kamal 
 
 ---
 
-**Note**: This is a demonstration project. For production use, ensure proper security audits, comprehensive testing, and appropriate infrastructure scaling.
+**Note**: Remember to update the JWT signing key and connection strings before deploying to production!
