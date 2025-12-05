@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.RateLimiting;
 using OrderManagementSystemApplication.BaseResponse;
 using OrderManagementSystemApplication.Dtos.Category;
 using OrderManagementSystemApplication.Services.Abstract;
+using OrderManagementSystemDomain.Enums;
+using OrderManagementSystemInfrastructure.Authorization;
 
 namespace OrderManagementSystemApi.Controllers
 {
@@ -11,6 +13,7 @@ namespace OrderManagementSystemApi.Controllers
     public class CategoryController(ICategoryService _categoryService) : ControllerBase
     {
         [HttpPost("CreateCategory")]
+        [CheckPermission(Permission.Write)]
         public async Task<ActionResult<ApiResponse<CategoryResponseDto>>> CreateCategory([FromBody] CategoryCreateDto categoryDto)
         {
             var response = await _categoryService.CreateCategoryAsync(categoryDto);

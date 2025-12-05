@@ -2,7 +2,6 @@
 using OrderManagementSystemApplication.BaseResponse;
 using OrderManagementSystemApplication.Dtos.User;
 using OrderManagementSystemApplication.Services.Abstract;
-using OrderManagementSystemDomain.Models;
 
 
 namespace OrderManagementSystemAPI.Controllers
@@ -12,14 +11,14 @@ namespace OrderManagementSystemAPI.Controllers
     public class AuthController(IUserService _userService) : ControllerBase
     {
         [HttpPost("register")]
-        public async Task<ActionResult<ApiResponse<User>>> Register([FromBody] RegisterRequest model)
+        public async Task<IActionResult> Register([FromBody] RegisterRequest model)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
             var response = await _userService.RegisterAsync(model);
 
-            return response;
+            return Ok("User registered successfully.");
         }
 
         [HttpPost("login")]

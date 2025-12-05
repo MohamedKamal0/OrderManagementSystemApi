@@ -13,6 +13,7 @@ namespace OrderManagementSystemInfrastructure.Data
         {
             base.OnModelCreating(modelBuilder);
             modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
+            modelBuilder.Entity<Userpermission>().HasKey(up => new { up.UserId, up.PermissionId });
 
         }
         public DbSet<User> Users { get; set; }

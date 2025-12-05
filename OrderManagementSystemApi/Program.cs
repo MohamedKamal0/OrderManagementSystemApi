@@ -12,6 +12,7 @@ using OrderManagementSystemApplication.Maping;
 using OrderManagementSystemApplication.Services.Abstract;
 using OrderManagementSystemApplication.Services.Implemntation;
 using OrderManagementSystemDomain.Repositories;
+using OrderManagementSystemInfrastructure.Authorization;
 using OrderManagementSystemInfrastructure.Data;
 using OrderManagementSystemInfrastructure.Repository;
 using Serilog;
@@ -22,7 +23,10 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddAutoMapper(typeof(CartMappingProfile));
 
-builder.Services.AddControllers();
+builder.Services.AddControllers(options =>
+{
+    options.Filters.Add<PermissionBaseAuthrizationFilter>();
+});
 
 builder.Services.AddStackExchangeRedisCache(options =>
 {

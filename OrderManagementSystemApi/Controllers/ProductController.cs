@@ -5,6 +5,8 @@ using OrderManagementSystemApplication.BaseResponse;
 using OrderManagementSystemApplication.Dtos;
 using OrderManagementSystemApplication.Dtos.Product;
 using OrderManagementSystemApplication.Services.Abstract;
+using OrderManagementSystemDomain.Enums;
+using OrderManagementSystemInfrastructure.Authorization;
 
 namespace OrderManagementSystemApi.Controllers
 {
@@ -13,7 +15,7 @@ namespace OrderManagementSystemApi.Controllers
     public class ProductController(IProductService _productService) : ControllerBase
     {
         [HttpPost("CreateProduct")]
-        [Authorize]
+        [CheckPermission(Permission.Write)]
         public async Task<ActionResult<ApiResponse<ProductResponseDto>>> CreateProduct([FromBody] ProductCreateDto productDto)
         {
             var response = await _productService.CreateProductAsync(productDto);
@@ -29,7 +31,7 @@ namespace OrderManagementSystemApi.Controllers
         }
 
         [HttpDelete("DeleteProduct/{id}")]
-        [Authorize]
+        [CheckPermission(Permission.Delete)]
         public async Task<ActionResult<ApiResponse<ConfirmationResponseDto>>> DeleteProduct(int id)
         {
             var response = await _productService.DeleteProductAsync(id);
