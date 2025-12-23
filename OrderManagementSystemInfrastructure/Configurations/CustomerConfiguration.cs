@@ -44,6 +44,8 @@ namespace OrderManagementSystemInfrastructure.Configurations
                 .IsUnique()
                 .HasDatabaseName("IX_Email_Unique");
 
+
+
             // Index on PhoneNumber for lookups
             builder.HasIndex(c => c.PhoneNumber);
 
