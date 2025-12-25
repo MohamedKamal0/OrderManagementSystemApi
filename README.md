@@ -11,15 +11,6 @@ This project follows Clean Architecture with four distinct layers:
 ├── OrderManagementSystemApplication/     # Business logic, DTOs, and services
 ├── OrderManagementSystemInfrastructure/  # Data access and repository implementations
 └── OrderManagementSystemApi/            # RESTful API endpoints and configuration
-```
-
-### Layer Responsibilities
-
-- **Domain Layer**: Core business entities, enums, and repository interfaces
-- **Application Layer**: Business logic, DTOs, AutoMapper profiles, and service interfaces
-- **Infrastructure Layer**: EF Core configurations, repository implementations, and data access
-- **API Layer**: Controllers, authentication, rate limiting, and API documentation
-
 ## 🚀 Features
 
 ### Core Functionality
@@ -413,80 +404,6 @@ docker-compose down
 
 # Remove volumes
 docker-compose down -v
-```
-
-## 🔧 Configuration
-
-### appsettings.json Structure
-
-```json
-{
-  "ConnectionStrings": {
-    "DefaultConnstring": "...",
-    "Redis": "..."
-  },
-  "JWT": { ... },
-  "Serilog": { ... },
-  "AllowedHosts": "*"
-}
-## 📦 NuGet Packages
-
-### API Layer
-- Microsoft.EntityFrameworkCore.Design
-- Microsoft.Extensions.Caching.Hybrid
-- Microsoft.Extensions.Caching.StackExchangeRedis
-- Serilog.AspNetCore
-- Swashbuckle.AspNetCore
-
-### Application Layer
-- AutoMapper.Extensions.Microsoft.DependencyInjection
-- Microsoft.AspNetCore.Authentication.JwtBearer
-- System.IdentityModel.Tokens.Jwt
-
-### Infrastructure Layer
-- Microsoft.EntityFrameworkCore.SqlServer
-- Microsoft.EntityFrameworkCore.Tools
-
-## 🚀 Deployment
-
-### Production Checklist
-
-- [ ] Update JWT signing key
-- [ ] Configure production connection strings
-- [ ] Enable HTTPS enforcement
-- [ ] Set up proper CORS policies
-- [ ] Configure production logging
-- [ ] Set up Redis cluster
-- [ ] Enable SQL Server connection pooling
-- [ ] Configure health checks
-- [ ] Set up application monitoring
-- [ ] Implement backup strategy
-
-## 📈 Performance Considerations
-
-- **Database Indexing**: Strategic indexes on frequently queried columns
-- **Caching**: Hybrid caching reduces database load
-- **Rate Limiting**: Prevents API abuse
-- **Connection Pooling**: Efficient database connections
-- **Async/Await**: Non-blocking operations throughout
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
-
-## 📄 License
-
-This project is licensed under the MIT License.
-
 ##  Author
 
 - **Mohamed Kamal** 
-
-## 🙏 Acknowledgments
----
-
-**⚠️ Important Security Note**: Remember to update the JWT signing key and all connection strings before deploying to production!
