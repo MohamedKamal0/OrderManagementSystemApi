@@ -32,8 +32,6 @@ namespace OrderManagementSystemAPI.Controllers
                 return BadRequest(response);
 
             var token = _userService.GenerateJwtToken(response.Data);
-
-
             return Ok(token);
         }
     }
