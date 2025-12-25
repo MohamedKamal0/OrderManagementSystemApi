@@ -1,42 +1,58 @@
 # Order Management System API
 
-A comprehensive e-commerce order management system built with ASP.NET Core 8.0, implementing Clean Architecture principles with Domain-Driven Design (DDD).
+A comprehensive e-commerce order management system built with **ASP.NET Core 8.0**, implementing **Clean Architecture**.
 
 ## 🏗️ Architecture
 
-This project follows Clean Architecture with four main layers:
+This project follows Clean Architecture with four distinct layers:
 
-- **Domain Layer**: Core business entities and repository interfaces
-- **Application Layer**: Business logic, DTOs, services, and AutoMapper profiles
-- **Infrastructure Layer**: Data access, EF Core configurations, and repository implementations
-- **API Layer**: RESTful endpoints, authentication, rate limiting, and Swagger documentation
+```
+├── OrderManagementSystemDomain/          # Core business entities and interfaces
+├── OrderManagementSystemApplication/     # Business logic, DTOs, and services
+├── OrderManagementSystemInfrastructure/  # Data access and repository implementations
+└── OrderManagementSystemApi/            # RESTful API endpoints and configuration
+```
+
+### Layer Responsibilities
+
+- **Domain Layer**: Core business entities, enums, and repository interfaces
+- **Application Layer**: Business logic, DTOs, AutoMapper profiles, and service interfaces
+- **Infrastructure Layer**: EF Core configurations, repository implementations, and data access
+- **API Layer**: Controllers, authentication, rate limiting, and API documentation
 
 ## 🚀 Features
 
 ### Core Functionality
-- **Customer Management**: Registration, profile updates, and soft deletion
-- **Product Catalog**: Category-based product organization with availability tracking
-- **Shopping Cart**: Add/remove items, quantity management, automatic pricing calculations
-- **Order Processing**: Multi-step order creation with address validation and inventory management
-- **Payment Gateway**: Multiple payment methods (Credit/Debit Card, PayPal, Cash on Delivery)
-- **Order Tracking**: Real-time status updates with state transition validation
+- ✅ **Customer Management**: Registration, profile updates, and soft deletion
+- ✅ **Product Catalog**: Category-based organization with stock tracking
+- ✅ **Shopping Cart**: Full cart lifecycle with automatic pricing calculations
+- ✅ **Order Processing**: Multi-step workflow with validation and inventory management
+- ✅ **Payment Gateway**: Support for Credit/Debit cards, PayPal, and Cash on Delivery
+- ✅ **Order Tracking**: Real-time status updates with state transition validation
+- ✅ **Address Management**: Multiple shipping and billing addresses per customer
 
 ### Technical Features
-- **Authentication & Authorization**: JWT-based authentication with permission-based access control
-- **Caching Strategy**: Hybrid caching (L1/L2/L3) with Redis and SQL Server
-- **Rate Limiting**: Fixed window rate limiting (100 requests/minute)
-- **Logging**: Structured logging with Serilog
-- **Data Validation**: Comprehensive input validation with Data Annotations
-- **Transaction Management**: Unit of Work pattern with ACID compliance
+- 🔐 **JWT Authentication**: Secure token-based authentication
+- 🛡️ **Permission-Based Authorization**: Fine-grained access control
+- 🚀 **Hybrid Caching**: Three-tier caching strategy (L1/L2/L3) with Redis
+- ⏱️ **Rate Limiting**: Fixed window limiting (100 requests/minute)
+- 📝 **Structured Logging**: Comprehensive logging with Serilog
+- ✔️ **Data Validation**: Input validation with Data Annotations
+- 🔄 **Transaction Management**: Unit of Work pattern with ACID compliance
+- 📊 **Database Indexing**: Optimized queries with strategic indexes
+- 🐳 **Docker Support**: Containerized deployment with Docker Compose
 
 ## 📋 Prerequisites
 
-- .NET 8.0 SDK
-- SQL Server 2019+
-- Redis Server (for distributed caching)
-- Visual Studio 2022 or JetBrains Rider
+- **.NET 8.0 SDK** or later
+- **SQL Server 2019+** (or SQL Server 2025 for Docker)
+- **Redis Server** (for distributed caching)
+- **Docker Desktop** (optional, for containerized deployment)
+- **Visual Studio 2022** or **JetBrains Rider** (recommended)
 
 ## 🛠️ Installation
+
+### Option 1: Local Development
 
 1. **Clone the repository**
 ```bash
@@ -46,148 +62,293 @@ cd OrderManagementSystemApi
 
 2. **Update connection strings**
 
-Edit `appsettings.json`:
+Edit `OrderManagementSystemApi/appsettings.json`:
 ```json
 {
   "ConnectionStrings": {
-    "DefaultConnstring": "Server=.;Database=Ordersystemapi;Trusted_Connection=True;TrustServerCertificate=true;",
+    "DefaultConnstring": "Server=.;Database=OrderManagementDB;Trusted_Connection=True;TrustServerCertificate=true;",
     "Redis": "localhost:6379"
+  },
+  "JWT": {
+    "Issuer": "your-issuer",
+    "Audience": "your-audience",
+    "Lifetime": 30,
+    "SigningKey": "your-256-bit-secret-key-change-this-in-production"
   }
 }
 ```
 
-3. **Run database migrations**
+3. **Install Redis** (if not already installed)
+```bash
+# Windows (using Chocolatey)
+choco install redis-64
+
+# macOS
+brew install redis
+
+# Linux
+sudo apt-get install redis-server
+```
+
+4. **Run database migrations**
 ```bash
 dotnet ef database update --project OrderManagementSystemInfrastructure --startup-project OrderManagementSystemApi
 ```
 
-4. **Build and run**
+5. **Build and run**
 ```bash
+dotnet restore
 dotnet build
 dotnet run --project OrderManagementSystemApi
 ```
 
-The API will be available at `https://localhost:7018` and `http://localhost:5295`
+The API will be available at:
+- HTTPS: `https://localhost:7018`
+- HTTP: `http://localhost:5295`
+- Swagger UI: `https://localhost:7018/swagger`
+
+### Option 2: Docker Deployment
+
+1. **Start the services**
+```bash
+docker-compose up -d
+```
+
+2. **Apply migrations** (first time only)
+```bash
+docker exec -it ecomers-api dotnet ef database update
+```
+
+The API will be available at `http://localhost:8080`
 
 ## 📚 API Documentation
 
-Once running, access Swagger UI at: `https://localhost:7018/swagger`
+Access the interactive Swagger documentation at: `https://localhost:7018/swagger`
+
+### Authentication Flow
+
+1. **Register a user**
+```bash
+POST /api/Auth/register
+{
+  "username": "testuser",
+  "email": "test@example.com",
+  "password": "SecurePassword123!"
+}
+```
+
+2. **Login to get JWT token**
+```bash
+POST /api/Auth/login
+{
+  "email": "test@example.com",
+  "password": "SecurePassword123!"
+}
+```
+
+3. **Use the token** in subsequent requests:
+```
+Authorization: Bearer <your-jwt-token>
+```
 
 ### Key Endpoints
 
-#### Authentication
-- `POST /api/Auth/register` - Register new user
-- `POST /api/Auth/login` - Login and receive JWT token
+#### 👤 Customers
+```http
+POST   /api/Customer/RegisterCustomer      # Register new customer
+GET    /api/Customer/GetCustomerById/{id}  # Get customer details
+PUT    /api/Customer/UpdateCustomer        # Update customer info
+DELETE /api/Customer/DeleteCustomer/{id}   # Soft delete customer
+```
 
-#### Customers
-- `POST /api/Customer/RegisterCustomer` - Register new customer
-- `GET /api/Customer/GetCustomerById/{id}` - Get customer details
-- `PUT /api/Customer/UpdateCustomer` - Update customer information
-- `DELETE /api/Customer/DeleteCustomer/{id}` - Soft delete customer
+#### 📦 Products
+```http
+POST   /api/Product/CreateProduct                    # Create product (Write permission)
+GET    /api/Product/GetAllProducts                   # List all products
+GET    /api/Product/GetProductById/{id}              # Get product details
+GET    /api/Product/GetAllProductsByCategory/{catId} # Filter by category
+PUT    /api/Product/UpdateProductStatus              # Update availability
+DELETE /api/Product/DeleteProduct/{id}               # Delete product (Delete permission)
+```
 
-#### Products
-- `POST /api/Product/CreateProduct` - Create new product (requires Write permission)
-- `GET /api/Product/GetAllProducts` - List all products
-- `GET /api/Product/GetAllProductsByCategory/{categoryId}` - Filter by category
-- `PUT /api/Product/UpdateProductStatus` - Update product availability
+#### 🏷️ Categories
+```http
+POST   /api/Category/CreateCategory      # Create category (Write permission)
+GET    /api/Category/GetAllCategories    # List all categories
+```
 
-#### Shopping Cart
-- `GET /api/Shopping/GetCart/{customerId}` - Get customer's cart
-- `POST /api/Shopping/AddToCart` - Add item to cart
-- `DELETE /api/Shopping/RemoveCartItem` - Remove item from cart
-- `DELETE /api/Shopping/ClearCart` - Clear entire cart
+#### 🛒 Shopping Cart
+```http
+GET    /api/Shopping/GetCart/{customerId}  # Get customer's cart (Auth required)
+POST   /api/Shopping/AddToCart             # Add item to cart (Auth required)
+DELETE /api/Shopping/RemoveCartItem        # Remove item (Auth required)
+DELETE /api/Shopping/ClearCart             # Clear cart (Auth required)
+```
 
-#### Orders
-- `POST /api/Order/CreateOrder` - Create new order (requires authentication)
-- `GET /api/Order/GetOrderById/{id}` - Get order details
-- `GET /api/Order/GetOrdersByCustomer/{customerId}` - Get customer orders
-- `PUT /api/Order/UpdateOrderStatus` - Update order status
+#### 📋 Orders
+```http
+POST   /api/Order/CreateOrder                   # Create order (Auth required)
+GET    /api/Order/GetOrderById/{id}             # Get order details
+GET    /api/Order/GetOrdersByCustomer/{custId}  # Get customer orders
+PUT    /api/Order/UpdateOrderStatus             # Update status (Auth required)
+```
 
-#### Payments
-- `POST /api/Payment/ProcessPayment` - Process payment (requires authentication)
-- `GET /api/Payment/GetPaymentById/{paymentId}` - Get payment details
-- `PUT /api/Payment/UpdatePaymentStatus` - Update payment status
+#### 💳 Payments
+```http
+POST   /api/Payment/ProcessPayment          # Process payment (Auth required)
+GET    /api/Payment/GetPaymentById/{id}     # Get payment details (Auth required)
+GET    /api/Payment/GetPaymentByOrderId/{id} # Get by order (Auth required)
+PUT    /api/Payment/UpdatePaymentStatus     # Update status (Auth required)
+```
+
+#### 📍 Addresses
+```http
+POST   /api/Address/CreateAddress              # Create address
+GET    /api/Address/GetAddressById/{id}        # Get address details
+PUT    /api/Address/UpdateAddress              # Update address
+DELETE /api/Address/DeleteAddress              # Delete address
+GET    /api/Address/GetAddressesByCustomer/{id} # Get customer addresses
+```
 
 ## 🗄️ Database Schema
 
 ### Core Entities
 
-**Customers**: Customer information with addresses and order history
-**Products**: Product catalog with categories, pricing, and inventory
-**Categories**: Product categorization
-**Orders**: Order header with status tracking
-**OrderItems**: Line items for each order
-**Payments**: Payment transactions and status
-**Cart/CartItems**: Shopping cart management
-**Addresses**: Customer shipping and billing addresses
+| Entity | Description |
+|--------|-------------|
+| **Customers** | Customer information with soft delete support |
+| **Addresses** | Shipping and billing addresses (many-to-one with Customers) |
+| **Categories** | Product categorization with active status |
+| **Products** | Product catalog with pricing, stock, and discounts |
+| **Cart** | Shopping cart header |
+| **CartItems** | Individual items in the cart |
+| **Orders** | Order header with status and totals |
+| **OrderItems** | Line items for each order |
+| **Payments** | Payment transactions with status tracking |
+| **Cancellations** | Order cancellation requests |
+| **Refunds** | Refund processing linked to cancellations |
+| **Users** | Authentication and authorization |
+| **Userpermission** | Permission assignments |
+
+### Key Relationships
+
+```
+Customer 1──╮
+            ├──* Address
+            ├──* Cart ──* CartItem ──* Product
+            └──* Order ──╮
+                         ├──* OrderItem ──* Product
+                         ├──1 Payment ──1 Refund
+                         └──1 Cancellation ──1 Refund
+                         
+Category 1──* Product
+```
 
 ### Enums
 
-- `OrderStatus`: Pending, Processing, Shipped, Delivered, Canceled
-- `PaymentStatus`: Pending, Completed, Failed, Refunded
-- `Permission`: Read, Write, Delete, Update
+```csharp
+OrderStatus: Pending, Processing, Shipped, Delivered, Canceled
+PaymentStatus: Pending, Completed, Failed, Refunded
+CancellationStatus: Pending, Approved, Rejected
+RefundStatus: Pending, Completed, Failed
+Permission: Read, Write, Delete, Update
+```
 
 ## 🔐 Security
 
 ### JWT Configuration
+
+Update these values in production:
+
 ```json
 {
   "JWT": {
-    "Issuer": "your-issuer",
-    "Audience": "your-audience",
+    "Issuer": "your-production-issuer",
+    "Audience": "your-production-audience",
     "Lifetime": 30,
-    "SigningKey": "your-256-bit-secret-key"
+    "SigningKey": "CHANGE-THIS-TO-A-STRONG-256-BIT-KEY-IN-PRODUCTION"
   }
 }
 ```
 
 ### Permission-Based Authorization
 
-The system uses custom permission attributes:
+Secure endpoints with custom attributes:
+
 ```csharp
 [CheckPermission(Permission.Write)]
-public async Task<ActionResult> CreateProduct(...)
+public async Task<ActionResult> CreateProduct(ProductCreateDto dto)
+{
+    // Only users with Write permission can access
+}
 ```
+
+### Password Hashing
+
+Passwords are hashed using **PBKDF2** with:
+- SHA-512 algorithm
+- 16-byte salt
+- 10,000 iterations
+- 32-byte hash output
 
 ## 🎯 Design Patterns
 
-- **Repository Pattern**: Data access abstraction
-- **Unit of Work**: Transaction management
-- **Dependency Injection**: Loose coupling between layers
-- **AutoMapper**: Object-to-object mapping
-- **Response Handler**: Standardized API responses
-- **Strategy Pattern**: Payment method processing
+| Pattern | Implementation |
+|---------|----------------|
+| **Repository** | Data access abstraction for each entity |
+| **Unit of Work** | Transaction management across repositories |
+| **Dependency Injection** | Constructor injection throughout |
+| **DTO Pattern** | Separate request/response objects |
+| **AutoMapper** | Automated object-to-object mapping |
+| **Response Handler** | Standardized API response structure |
+| **Strategy** | Payment method processing |
 
 ## 📊 Caching Strategy
 
-The system implements three-tier caching:
+Three-tier hybrid caching implementation:
 
-- **L1 Cache**: In-memory (30 seconds TTL)
-- **L2 Cache**: Redis distributed cache
-- **L3 Cache**: SQL Server cache (10 minutes TTL)
+```csharp
+L1 (In-Memory)  →  30 seconds TTL
+L2 (Redis)      →  10 minutes TTL  
+L3 (SQL Server) →  10 minutes TTL
+```
 
-Example configuration:
+**Cached Entities:**
+- Categories (all)
+- Products (by category)
+
+**Configuration:**
 ```csharp
 builder.Services.AddHybridCache(options =>
 {
     options.DefaultEntryOptions = new HybridCacheEntryOptions
     {
-        Expiration = TimeSpan.FromMinutes(10), // L2, L3 
+        Expiration = TimeSpan.FromMinutes(10),        // L2, L3
         LocalCacheExpiration = TimeSpan.FromSeconds(30) // L1
     };
 });
 ```
 
-## 🧪 Testing
+## 🚦 Rate Limiting
 
-Run tests with:
-```bash
-dotnet test
+**Default Configuration:**
+- 100 requests per minute per client
+- 10 queued requests
+- FIFO queue processing
+- Applied to read-heavy endpoints
+
+**Custom Configuration:**
+```csharp
+[EnableRateLimiting("DefaultPolicy")]
+public async Task<ActionResult> GetAllProducts()
+{
+    // Rate limited endpoint
+}
 ```
 
 ## 📝 Logging
 
-Logs are configured with Serilog and written to the console. To customize logging:
+Structured logging with **Serilog**:
 
 ```json
 {
@@ -198,23 +359,134 @@ Logs are configured with Serilog and written to the console. To customize loggin
         "Microsoft": "Warning",
         "System": "Warning"
       }
-    }
+    },
+    "WriteTo": [
+      {
+        "Name": "Console",
+        "Args": {
+          "outputTemplate": "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}"
+        }
+      }
+    ]
   }
 }
 ```
 
-## 🚦 Rate Limiting
+**Log Categories:**
+- Request/Response logging
+- Error tracking
+- Performance monitoring
+- Business event logging
 
-Default rate limiting is configured as:
-- 100 requests per minute
-- 10 queued requests
-- FIFO queue processing
+## 🧪 Testing
 
+```bash
+# Run all tests
+dotnet test
 
-## 👥 Authors
+# Run with coverage
+dotnet test /p:CollectCoverage=true
+```
 
-- Mohamed Kamal 
+## 🐳 Docker Support
 
+### Docker Compose Services
+
+```yaml
+services:
+  - ecomers-api:  ASP.NET Core API (port 8080)
+  - sql_server:   SQL Server 2025 (port 1433)
+  - (Redis should be added for production)
+```
+
+### Commands
+
+```bash
+# Build and start
+docker-compose up --build -d
+
+# View logs
+docker-compose logs -f
+
+# Stop services
+docker-compose down
+
+# Remove volumes
+docker-compose down -v
+```
+
+## 🔧 Configuration
+
+### appsettings.json Structure
+
+```json
+{
+  "ConnectionStrings": {
+    "DefaultConnstring": "...",
+    "Redis": "..."
+  },
+  "JWT": { ... },
+  "Serilog": { ... },
+  "AllowedHosts": "*"
+}
+## 📦 NuGet Packages
+
+### API Layer
+- Microsoft.EntityFrameworkCore.Design
+- Microsoft.Extensions.Caching.Hybrid
+- Microsoft.Extensions.Caching.StackExchangeRedis
+- Serilog.AspNetCore
+- Swashbuckle.AspNetCore
+
+### Application Layer
+- AutoMapper.Extensions.Microsoft.DependencyInjection
+- Microsoft.AspNetCore.Authentication.JwtBearer
+- System.IdentityModel.Tokens.Jwt
+
+### Infrastructure Layer
+- Microsoft.EntityFrameworkCore.SqlServer
+- Microsoft.EntityFrameworkCore.Tools
+
+## 🚀 Deployment
+
+### Production Checklist
+
+- [ ] Update JWT signing key
+- [ ] Configure production connection strings
+- [ ] Enable HTTPS enforcement
+- [ ] Set up proper CORS policies
+- [ ] Configure production logging
+- [ ] Set up Redis cluster
+- [ ] Enable SQL Server connection pooling
+- [ ] Configure health checks
+- [ ] Set up application monitoring
+- [ ] Implement backup strategy
+
+## 📈 Performance Considerations
+
+- **Database Indexing**: Strategic indexes on frequently queried columns
+- **Caching**: Hybrid caching reduces database load
+- **Rate Limiting**: Prevents API abuse
+- **Connection Pooling**: Efficient database connections
+- **Async/Await**: Non-blocking operations throughout
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+## 📄 License
+
+This project is licensed under the MIT License.
+
+##  Author
+
+- **Mohamed Kamal** 
+
+## 🙏 Acknowledgments
 ---
 
-**Note**: Remember to update the JWT signing key and connection strings before deploying to production!
+**⚠️ Important Security Note**: Remember to update the JWT signing key and all connection strings before deploying to production!
